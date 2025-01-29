@@ -72,8 +72,8 @@ jobs:
 
             [Service]
             User=ubuntu
-            WorkingDirectory=/home/ubuntu/oci-cloud/divvy_tax
-            ExecStart=/home/ubuntu/oci-cloud/divvy_tax/venv/bin/streamlit run app.py
+            WorkingDirectory=/home/ubuntu/divvy_tax/divvy_tax  # Correct path
+            ExecStart=/home/ubuntu/divvy_tax/divvy_tax/venv/bin/streamlit run app.py  # Correct path and script name
             Restart=always
             RestartSec=10
 
