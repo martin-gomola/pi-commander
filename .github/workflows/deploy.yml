@@ -1,0 +1,77 @@
+name: Deploy Streamlit to Oracle Cloud
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts # No port needed for ssh-keyscan if using default port 22
+
+      - name: Deploy to Oracle Cloud
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+
+            sudo apt update && sudo apt install -y git python3-venv python3-pip
+
+            REPO_URL="git@github.com:martin-gomola/oci-cloud.git"
+
+            if [ ! -d "${{ secrets.PROJECT_DIR }}" ]; then
+              git clone "$REPO_URL" "${{ secrets.PROJECT_DIR }}"
+            fi
+
+            cd "${{ secrets.PROJECT_DIR }}/divvy_tax" || exit 1
+
+            git fetch origin
+            git reset --hard origin/main
+
+            if [ ! -d "venv" ]; then
+              python3 -m venv venv
+            fi
+            source venv/bin/activate
+
+            if [ -f "requirements.txt" ]; then
+              pip install --upgrade pip
+              pip install -r requirements.txt
+            else
+              echo "ERROR: requirements.txt not found in divvy_tax!"
+              exit 1
+            fi
+
+            # Streamlit Service Setup (Corrected with spaces)
+            sudo tee /etc/systemd/system/streamlit.service << EOF
+            [Unit]
+            Description=Streamlit Application
+            After=network.target
+
+            [Service]
+            User=ubuntu  # Replace if necessary
+            WorkingDirectory=/home/ubuntu/oci-cloud/divvy_tax  # Your Streamlit app directory
+            ExecStart=/home/ubuntu/oci-cloud/divvy_tax/venv/bin/streamlit run app.py  # Your Streamlit app and path to executable
+            Restart=always
+            RestartSec=10
+
+            [Install]
+            WantedBy=multi-user.target
+            EOF  # <--- EOF must be at the very beginning of the line
+
+            sudo systemctl enable streamlit.service
+            sudo systemctl start streamlit.service
+
+            sudo systemctl status streamlit.service  # Check the status!
+
+          EOF

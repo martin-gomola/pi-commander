@@ -1,0 +1,16 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - netcat
+write_files:
+  - encoding: b64
+    content: ${filebase64(var.ssh_private_key_path)}
+    path: /home/ubuntu/cluster_key
+    permissions: '0600'
+runcmd:
+  - sudo chown ubuntu:ubuntu /home/ubuntu/cluster_key
+  - curl -sfL https://get.k3s.io | sh -s - --write-kubeconfig-mode 644
+  - sudo cp /etc/rancher/k3s/k3s.yaml /home/ubuntu/k3s.yaml
+  - sudo chown ubuntu:ubuntu /home/ubuntu/k3s.yaml
+  - echo "K3s control plane setup complete."
