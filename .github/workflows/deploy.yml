@@ -21,13 +21,22 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts # No port needed for ssh-keyscan if using default port 22
 
-      - name: Deploy to Oracle Cloud
+      - name: SSH into Oracle VM and configure server
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
 
-            sudo apt update && sudo apt install -y git python3-venv python3-pip
+            # Update and install necessary packages
+            sudo apt update && sudo apt install -y git python3-pip python3-venv ufw nginx
 
+            # Allow traffic on port 8501 (Streamlit) and 80 (HTTP)
+            sudo ufw allow 8501
+            sudo ufw allow 80
+
+            # Enable and start UFW
+            sudo ufw enable
+
+            # Clone the repository if it doesn't exist
             REPO_URL="git@github.com:martin-gomola/oci-cloud.git"
 
             if [ ! -d "${{ secrets.PROJECT_DIR }}" ]; then
@@ -36,14 +45,17 @@ jobs:
 
             cd "${{ secrets.PROJECT_DIR }}/divvy_tax" || exit 1
 
+            # Fetch the latest code
             git fetch origin
             git reset --hard origin/main
 
+            # Create and activate a virtual environment
             if [ ! -d "venv" ]; then
               python3 -m venv venv
             fi
             source venv/bin/activate
 
+            # Install dependencies from requirements.txt
             if [ -f "requirements.txt" ]; then
               pip install --upgrade pip
               pip install -r requirements.txt
@@ -52,26 +64,36 @@ jobs:
               exit 1
             fi
 
-            # Streamlit Service Setup (Corrected with spaces)
+            # Setup Streamlit service (as a systemd service)
             sudo tee /etc/systemd/system/streamlit.service << EOF
             [Unit]
             Description=Streamlit Application
             After=network.target
 
             [Service]
-            User=ubuntu  # Replace if necessary
-            WorkingDirectory=/home/ubuntu/oci-cloud/divvy_tax  # Your Streamlit app directory
-            ExecStart=/home/ubuntu/oci-cloud/divvy_tax/venv/bin/streamlit run app.py  # Your Streamlit app and path to executable
+            User=ubuntu
+            WorkingDirectory=/home/ubuntu/oci-cloud/divvy_tax
+            ExecStart=/home/ubuntu/oci-cloud/divvy_tax/venv/bin/streamlit run app.py
             Restart=always
             RestartSec=10
 
             [Install]
             WantedBy=multi-user.target
-            EOF  # <--- EOF must be at the very beginning of the line
+            EOF
 
+            # Enable and start Streamlit service
             sudo systemctl enable streamlit.service
             sudo systemctl start streamlit.service
 
-            sudo systemctl status streamlit.service  # Check the status!
+            # Restart nginx service to ensure it's running
+            sudo systemctl restart nginx
 
+            # Output the status of Streamlit service for debugging
+            sudo systemctl status streamlit.service
+          EOF
+
+      - name: Check Streamlit app status
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            sudo systemctl status streamlit.service
           EOF
