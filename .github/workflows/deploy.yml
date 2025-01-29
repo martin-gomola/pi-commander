@@ -19,7 +19,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts # No port needed for ssh-keyscan if using default port 22
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
       - name: SSH into Oracle VM and configure server
         run: |
@@ -64,6 +64,17 @@ jobs:
               exit 1
             fi
 
+            # Ensure static directory exists
+            sudo mkdir -p /var/www/html/
+            
+            # Copy index.html to Nginx root directory
+            if [ -f "static/index.html" ]; then
+              sudo cp static/index.html /var/www/html/index.html
+            else
+              echo "ERROR: static/index.html not found!"
+              exit 1
+            fi
+
             # Streamlit service setup
             sudo tee /etc/systemd/system/streamlit.service << 'SERVICE_EOF'
           [Unit]
@@ -93,14 +104,21 @@ jobs:
             server {
                 listen 80;
 
-                server_name _;  # Use your domain name here or leave as underscore for default
+                server_name 130.61.61.15;
 
-                location / {
-                    proxy_pass http://localhost:8501;  # Streamlit app port
-                    proxy_set_header Host \$host;
-                    proxy_set_header X-Real-IP \$remote_addr;
-                    proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto \$scheme;
+                # Serve static page at the root
+                location = / {
+                    root /var/www/html;  # Path to index.html
+                    index index.html;
+                }
+
+                # Reverse proxy for Streamlit app
+                location /divvy/ {
+                    proxy_pass http://localhost:8501/;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                    proxy_set_header X-Forwarded-Proto $scheme;
                 }
             }
             NGINX_EOF
