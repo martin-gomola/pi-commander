@@ -65,21 +65,21 @@ jobs:
             fi
 
             # Streamlit service setup
-            sudo tee /etc/systemd/system/streamlit.service << EOF
-            [Unit]
-            Description=Streamlit Application
-            After=network.target
+            sudo tee /etc/systemd/system/streamlit.service << 'SERVICE_EOF'
+          [Unit]
+          Description=Streamlit Application
+          After=network.target
 
-            [Service]
-            User=ubuntu
-            WorkingDirectory=/home/ubuntu/divvy_tax/divvy_tax  # Correct path
-            ExecStart=/home/ubuntu/divvy_tax/divvy_tax/venv/bin/streamlit run app.py  # Correct path and script name
-            Restart=always
-            RestartSec=10
+          [Service]
+          User=ubuntu
+          WorkingDirectory=/home/ubuntu/divvy_tax/divvy_tax  # Correct path
+          ExecStart=/home/ubuntu/divvy_tax/divvy_tax/venv/bin/streamlit run app.py --server.address=0.0.0.0 --server.port=8501
+          Restart=always
+          RestartSec=10
 
-            [Install]
-            WantedBy=multi-user.target
-            EOF
+          [Install]
+          WantedBy=multi-user.target            
+            SERVICE_EOF
 
             # Enable and start Streamlit service
             sudo systemctl enable streamlit.service
@@ -89,7 +89,7 @@ jobs:
             sudo systemctl restart nginx
 
             # Nginx configuration for reverse proxy
-            sudo tee /etc/nginx/sites-available/streamlit << EOF
+            sudo tee /etc/nginx/sites-available/streamlit << 'NGINX_EOF'
             server {
                 listen 80;
 
@@ -103,7 +103,7 @@ jobs:
                     proxy_set_header X-Forwarded-Proto \$scheme;
                 }
             }
-            EOF
+            NGINX_EOF
 
             # Enable the Nginx configuration by creating a symbolic link
             sudo ln -s /etc/nginx/sites-available/streamlit /etc/nginx/sites-enabled/
