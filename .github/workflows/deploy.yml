@@ -21,84 +21,84 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
-      - name: SSH into Oracle VM and configure server
+      - name: SSH into Oracle VM and deploy app
         run: |
-          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-            set -e
+            ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+              set -e  # Stop execution on any error
 
-            # Update and install necessary packages
-            sudo apt update && sudo apt install -y git python3-pip python3-venv ufw nginx
+              # Define project directory
+              PROJECT_DIR="cloud"
+              REPO_URL="git@github.com:martin-gomola/oci-cloud.git"
 
-            # Allow traffic on ports 8501 (Streamlit) and 80 (HTTP)
-            sudo ufw allow 8501
-            sudo ufw allow 80
+              # Install required dependencies
+              sudo apt update && sudo apt install -y git python3-pip python3-venv ufw nginx
 
-            # Enable and start UFW
-            sudo ufw enable
+              # Allow necessary ports
+              sudo ufw allow 8501
+              sudo ufw allow 80
+              sudo ufw --force enable
 
-            # Clone the repository if it doesn't exist
-            REPO_URL="git@github.com:martin-gomola/oci-cloud.git"
+              # Remove old project folder if it exists (to prevent stale files)
+              if [ -d "$PROJECT_DIR" ]; then
+                sudo rm -rf "$PROJECT_DIR"
+              fi
 
-            if [ ! -d "${{ secrets.PROJECT_DIR }}" ]; then
-              git clone "$REPO_URL" "${{ secrets.PROJECT_DIR }}"
-            fi
+              # Clone the latest version of the repository
+              git clone "$REPO_URL" "$PROJECT_DIR"
+              cd "$PROJECT_DIR" || exit 1
 
-            cd "${{ secrets.PROJECT_DIR }}/divvy_tax" || exit 1
+              # Debug: List all files in the project directory to verify structure
+              echo "Listing contents of PROJECT_DIR:"
+              ls -l "$PROJECT_DIR"
 
-            # Clean up the repository folder before pulling new data
-            find . -mindepth 1 -not -name '.git' -not -path './.git/*' -exec rm -rf {} +
-            git reset --hard
-            git pull origin main
+              # Debug: List files in the static directory if it exists
+              if [ -d "$PROJECT_DIR/static" ]; then
+                echo "Static directory found, listing its contents:"
+                ls -l "$PROJECT_DIR/static"
+              else
+                echo "ERROR: $PROJECT_DIR/static directory not found!"
+                exit 1
+              fi
 
-            # Create and activate a virtual environment
-            if [ ! -d "venv" ]; then
-              python3 -m venv venv
-            fi
-            source venv/bin/activate
+              # Create and activate a virtual environment
+              cd "$PROJECT_DIR/divvy_tax" || exit 1
+              if [ ! -d "venv" ]; then
+                python3 -m venv venv
+              fi
+              source venv/bin/activate
 
-            # Install dependencies from requirements.txt
-            if [ -f "requirements.txt" ]; then
+              # Install dependencies
               pip install --upgrade pip
               pip install -r requirements.txt
-            else
-              echo "ERROR: requirements.txt not found in divvy_tax!"
-              exit 1
-            fi
 
-            # Ensure static directory exists
-            sudo mkdir -p /var/www/html/
+              # Ensure static directory exists
+              sudo mkdir -p /var/www/html/
 
-            # Copy index.html to Nginx root directory
-            if [ -f "static/index.html" ]; then
-              sudo cp static/index.html /var/www/html/index.html
-            else
-              echo "ERROR: static/index.html not found!"
-              exit 1
-            fi
+              # Copy index.html to Nginx root directory using PROJECT_DIR
+              if [ -f "$PROJECT_DIR/static/index.html" ]; then
+                echo "Found index.html, copying to Nginx root directory."
+                sudo cp "$PROJECT_DIR/static/index.html" /var/www/html/index.html
+              else
+                echo "ERROR: $PROJECT_DIR/static/index.html not found!"
+                exit 1
+              fi
 
-            # Streamlit service setup
-            sudo cp ./systemd/streamlit.service /etc/systemd/system/streamlit.service
+              # Configure Streamlit service
+              sudo cp "$PROJECT_DIR/divvy_tax/systemd/streamlit.service" /etc/systemd/system/streamlit.service
+              sudo systemctl daemon-reexec
+              sudo systemctl enable --now streamlit.service
 
-            # Enable and restart Streamlit service
-            sudo systemctl daemon-reload
-            sudo systemctl enable streamlit.service
-            sudo systemctl restart streamlit.service
+              # Configure Nginx
+              sudo cp "$PROJECT_DIR/divvy_tax/nginx/streamlit.conf" /etc/nginx/sites-available/streamlit
+              sudo ln -sf /etc/nginx/sites-available/streamlit /etc/nginx/sites-enabled/streamlit
+              sudo nginx -t && sudo systemctl restart nginx
 
-            # Nginx configuration for reverse proxy
-            sudo cp ./nginx/streamlit.conf /etc/nginx/sites-available/streamlit
+              # Output status for debugging
+              sudo systemctl status streamlit.service --no-pager
+              sudo systemctl status nginx --no-pager
+            EOF
 
-            # Enable the Nginx configuration
-            sudo ln -sf /etc/nginx/sites-available/streamlit /etc/nginx/sites-enabled/
-
-            # Test Nginx configuration and restart
-            sudo nginx -t && sudo systemctl restart nginx
-
-            # Output the status of Streamlit and Nginx services for debugging
-            sudo systemctl status streamlit.service --no-pager
-            sudo systemctl status nginx --no-pager
-          EOF
-
-      - name: Check Streamlit app status
+      - name: Verify Deployment
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             sudo systemctl status streamlit.service --no-pager
