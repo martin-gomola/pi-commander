@@ -66,7 +66,7 @@ jobs:
 
             # Ensure static directory exists
             sudo mkdir -p /var/www/html/
-            
+
             # Copy index.html to Nginx root directory
             if [ -f "static/index.html" ]; then
               sudo cp static/index.html /var/www/html/index.html
@@ -76,21 +76,7 @@ jobs:
             fi
 
             # Streamlit service setup
-            sudo tee /etc/systemd/system/streamlit.service << 'SERVICE_EOF'
-          [Unit]
-          Description=Streamlit Application
-          After=network.target
-
-          [Service]
-          User=ubuntu
-          WorkingDirectory=/home/ubuntu/divvy_tax/divvy_tax  # Correct path
-          ExecStart=/home/ubuntu/divvy_tax/divvy_tax/venv/bin/streamlit run app.py --server.address=0.0.0.0 --server.port=8501
-          Restart=always
-          RestartSec=10
-
-          [Install]
-          WantedBy=multi-user.target            
-            SERVICE_EOF
+            sudo tee /etc/systemd/system/streamlit.service < ./systemd/streamlit.service
 
             # Enable and start Streamlit service
             sudo systemctl enable streamlit.service
@@ -100,33 +86,7 @@ jobs:
             sudo systemctl restart nginx
 
             # Nginx configuration for reverse proxy
-            sudo tee /etc/nginx/sites-available/streamlit << 'NGINX_EOF'
-            server {
-                listen 80;
-
-                server_name 130.61.61.15;
-
-                # Serve static page at the root
-                location = / {
-                    root /var/www/html;  # Path to index.html
-                    index index.html;
-                }
-
-                # Reverse proxy for Streamlit app
-                location /divvy/ {
-                    proxy_pass http://localhost:8501/;
-                    
-                    # WebSocket handling
-                    proxy_http_version 1.1;
-                    proxy_set_header Upgrade $http_upgrade;
-                    proxy_set_header Connection 'upgrade';
-                    proxy_set_header Host $host;
-                    proxy_set_header X-Real-IP $remote_addr;
-                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                    proxy_set_header X-Forwarded-Proto $scheme;
-                }
-            }
-            NGINX_EOF
+            sudo tee /etc/nginx/sites-available/streamlit < ./nginx/streamlit.conf
 
             # Enable the Nginx configuration by creating a symbolic link
             sudo ln -s /etc/nginx/sites-available/streamlit /etc/nginx/sites-enabled/
