@@ -35,16 +35,26 @@ jobs:
 
       - name: Copy Nginx configuration
         run: |
-          scp ${{ github.workspace }}/nginx/streamlit.conf ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/
+          scp ${{ github.workspace }}/nginx/streamlit.conf ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/streamlit.conf
 
       - name: Copy Systemd service file
         run: |
-          scp ${{ github.workspace }}/systemd/streamlit.service ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/
+          scp ${{ github.workspace }}/systemd/streamlit.service ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/streamlit.service
+
+      - name: Copy static files
+        run: |
+          scp ${{ github.workspace }}/static/index.html ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/var/www/html/
 
       - name: SSH into Oracle VM and deploy app
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e  # Stop execution on any error
+
+            # Remove existing symlink
+            sudo rm -f /etc/nginx/sites-enabled/streamlit.conf 
+            
+            # Remove default Nginx index.html if it exists
+            sudo rm -f /var/www/html/index.html 
 
             # Install dependencies
             cd /home/ubuntu/cloud/divvy_tax
@@ -66,9 +76,9 @@ jobs:
             pip install -r requirements.txt
 
             # Copy Nginx and Systemd files to correct locations
-            sudo cp /tmp/streamlit.conf /etc/nginx/sites-available/
+            sudo cp /tmp/streamlit.conf /etc/nginx/sites-available/streamlit.conf
             sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/
-            sudo cp /tmp/streamlit.service /etc/systemd/system/
+            sudo cp /tmp/streamlit.service /etc/systemd/system/streamlit.service
 
             # Reload systemd and nginx
             sudo systemctl daemon-reload
