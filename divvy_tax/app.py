@@ -38,9 +38,6 @@ def process_dividends(df, conversion_rate):
 # Streamlit UI
 st.title("Slovak Tax Dividend Helper")
 
-# File upload option
-uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
-
 # Default exchange rate
 conversion_rate = st.number_input("Enter USD to EUR conversion rate", value=1.0813, format="%.4f")
 
@@ -48,48 +45,45 @@ conversion_rate = st.number_input("Enter USD to EUR conversion rate", value=1.08
 if "df" not in st.session_state:
     st.session_state.df = pd.DataFrame()
 
-# If no CSV is uploaded, allow manual entry
-if not uploaded_file:
-    st.write("### Enter Dividend Details Manually")
+# Manually input dividend details
+st.write("### Enter Dividend Details Manually")
     
-    # Create columns for country and tax percentage
-    col1, col2 = st.columns([1, 1])
+# Create columns for country and tax percentage
+col1, col2 = st.columns([1, 1])
 
-    # Country select dropdown in the first column
-    selected_country = col1.selectbox("Select Country", [country[1] for country in countries])
+# Country select dropdown in the first column
+selected_country = col1.selectbox("Select Country", [country[1] for country in countries])
 
-    # Find default tax percentage and currency for the selected country
-    country_data = next((country for country in countries if country[1] == selected_country), None)
-    tax_percentage = country_data[2] if country_data else 0.15
-    default_currency = country_data[3] if country_data else "EUR"
+# Find default tax percentage and currency for the selected country
+country_data = next((country for country in countries if country[1] == selected_country), None)
+tax_percentage = country_data[2] if country_data else 0.15
+default_currency = country_data[3] if country_data else "EUR"
 
-    # Tax percentage input in the second column, with default value
-    tax_input = col2.number_input(f"Tax % for {selected_country}", value=tax_percentage * 100, min_value=0.0, format="%.2f")
+# Tax percentage input in the second column, with default value
+tax_input = col2.number_input(f"Tax % for {selected_country}", value=tax_percentage * 100, min_value=0.0, format="%.2f")
 
-    # Create columns for Dividends, Currency input, and Source in one row
-    col3, col4, col5 = st.columns([2, 1, 1])
+# Create columns for Dividends, Currency input, and Source in one row
+col3, col4, col5 = st.columns([2, 1, 1])
 
-    # Dividends input in the first column
-    dividends = col3.number_input("Dividends", min_value=0.0, format="%.2f")
+# Dividends input in the first column
+dividends = col3.number_input("Dividends", min_value=0.0, format="%.2f")
 
-    # Currency input in the second column, preset based on selected country
-    currency = col4.selectbox("Currency", ["EUR", "USD"], index=["EUR", "USD"].index(default_currency))
+# Currency input in the second column, preset based on selected country
+currency = col4.selectbox("Currency", ["EUR", "USD"], index=["EUR", "USD"].index(default_currency))
 
-    # Source dropdown for where the dividend is coming from
-    source = col5.selectbox("Source", ["IBKR", "Revolut", "Schwab"])
+# Source dropdown for where the dividend is coming from
+source = col5.selectbox("Source", ["IBKR", "Revolut", "Schwab"])
 
-    # Add dividend entry to the session state dataframe
-    if st.button("Add Dividend"):
-        new_entry = {
-            "Country": selected_country,
-            "Dividends": dividends,
-            "Currency": currency, 
-            "Tax %": tax_input,
-            "Source": source
-        }
-        st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([new_entry])], ignore_index=True)
-else:
-    st.session_state.df = pd.read_csv(uploaded_file)
+# Add dividend entry to the session state dataframe
+if st.button("Add Dividend"):
+    new_entry = {
+        "Country": selected_country,
+        "Dividends": dividends,
+        "Currency": currency, 
+        "Tax %": tax_input,
+        "Source": source
+    }
+    st.session_state.df = pd.concat([st.session_state.df, pd.DataFrame([new_entry])], ignore_index=True)
 
 # Process and display summary if data is available
 if not st.session_state.df.empty:
