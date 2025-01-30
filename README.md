@@ -79,6 +79,19 @@ To install any package on the server (for example, htop to monitor system proces
 ```bash
 sudo apt install htop
 ```
+
+ Edit the Nginx configuration file:
+sudo nano /etc/nginx/sites-available/streamlit
+
+sudo rm /etc/nginx/sites-enabled/streamlit
+sudo ln -s /etc/nginx/sites-available/streamlit /etc/nginx/sites-enabled/
+
+sudo nginx -t
+
+sudo systemctl restart nginx
+
+
+
 Project Structure
 
 ```

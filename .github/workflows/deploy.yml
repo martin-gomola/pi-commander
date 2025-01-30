@@ -45,9 +45,10 @@ jobs:
 
             cd "${{ secrets.PROJECT_DIR }}/divvy_tax" || exit 1
 
-            # Fetch the latest code
-            git fetch origin
-            git reset --hard origin/main
+            # Clean up the repository folder before pulling new data
+            find . -mindepth 1 -not -name '.git' -not -path './.git/*' -exec rm -rf {} +
+            git reset --hard
+            git pull origin main
 
             # Create and activate a virtual environment
             if [ ! -d "venv" ]; then
@@ -76,35 +77,30 @@ jobs:
             fi
 
             # Streamlit service setup
-            sudo tee /etc/systemd/system/streamlit.service < ./systemd/streamlit.service
+            sudo cp ./systemd/streamlit.service /etc/systemd/system/streamlit.service
 
-            # Enable and start Streamlit service
+            # Enable and restart Streamlit service
+            sudo systemctl daemon-reload
             sudo systemctl enable streamlit.service
-            sudo systemctl start streamlit.service
-
-            # Restart nginx service to ensure it's running
-            sudo systemctl restart nginx
+            sudo systemctl restart streamlit.service
 
             # Nginx configuration for reverse proxy
-            sudo tee /etc/nginx/sites-available/streamlit < ./nginx/streamlit.conf
+            sudo cp ./nginx/streamlit.conf /etc/nginx/sites-available/streamlit
 
-            # Enable the Nginx configuration by creating a symbolic link
-            sudo ln -s /etc/nginx/sites-available/streamlit /etc/nginx/sites-enabled/
+            # Enable the Nginx configuration
+            sudo ln -sf /etc/nginx/sites-available/streamlit /etc/nginx/sites-enabled/
 
-            # Test Nginx configuration for syntax errors
-            sudo nginx -t
-
-            # Restart Nginx to apply the configuration
-            sudo systemctl restart nginx
+            # Test Nginx configuration and restart
+            sudo nginx -t && sudo systemctl restart nginx
 
             # Output the status of Streamlit and Nginx services for debugging
-            sudo systemctl status streamlit.service
-            sudo systemctl status nginx
+            sudo systemctl status streamlit.service --no-pager
+            sudo systemctl status nginx --no-pager
           EOF
 
       - name: Check Streamlit app status
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-            sudo systemctl status streamlit.service
-            sudo systemctl status nginx
+            sudo systemctl status streamlit.service --no-pager
+            sudo systemctl status nginx --no-pager
           EOF
