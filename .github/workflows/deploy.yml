@@ -24,9 +24,29 @@ jobs:
         run: |
           scp -r ./divvy_tax ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
 
-      - name: Copy static files
+      - name: Copy static files to temporary directory
         run: |
-          scp ${{ github.workspace }}/static/index.html ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/var/www/html/static
+          scp -r ${{ github.workspace }}/static/. ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/static
+
+      - name: Move static files to /var/www/html
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            # Remove the old static directory if it exists
+            sudo rm -rf /var/www/html/static
+            
+            # Create new static directory
+            sudo mkdir -p /var/www/html/static
+            
+            # Move the new static files from /tmp to /var/www/html/static
+            sudo mv /tmp/static/* /var/www/html/static/
+
+            # Set proper permissions and ownership
+            sudo chown -R ubuntu:ubuntu /var/www/html/static
+            sudo chmod -R 755 /var/www/html/static
+
+            echo "Static files deployed successfully!"
+          EOF
 
       - name: Deploy and restart app
         run: |

@@ -47,7 +47,9 @@ sudo systemctl disable nginx
 Streamlit Logs
 If you need to check logs for Streamlit specifically, you can find them in the journal logs:
 ```bash
-sudo journalctl -u streamlit.service
+sudo journalctl -u streamlit.service --no-pager --lines=50
+
+sudo journalctl -u nginx --no-pager --lines=50
 ```
 Viewing Server Disk Space
 To check disk space usage on the server:
@@ -81,10 +83,10 @@ sudo apt install htop
 ```
 
  Edit the Nginx configuration file:
-sudo nano /etc/nginx/sites-available/streamlit
+sudo nano /etc/nginx/sites-available/streamlit.conf
 
-sudo rm /etc/nginx/sites-enabled/streamlit
-sudo ln -s /etc/nginx/sites-available/streamlit /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/streamlit.conf
+sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/
 
 sudo nginx -t
 

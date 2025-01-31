@@ -35,7 +35,7 @@ jobs:
             # sudo rm -rf /home/ubuntu/cloud/*
 
             # Reinstall dependencies
-            sudo apt update && sudo apt install -y python3-venv python3-pip nginx
+            sudo apt update && sudo apt install -y python3-venv python3-pip nginx ufw
             sudo mkdir -p /home/ubuntu/cloud
             sudo chown ubuntu:ubuntu /home/ubuntu/cloud
             sudo chmod 700 /home/ubuntu/cloud
@@ -62,8 +62,18 @@ jobs:
             sudo cp /tmp/streamlit.service /etc/systemd/system/streamlit.service
             sudo systemctl daemon-reload
 
+            # Allow Nginx Full profile through UFW
+            sudo ufw allow 'Nginx Full'
+
+            # Allow traffic on port 8501 (Streamlit)
+            sudo ufw allow 8501
+
+            # Enable and start UFW
+            sudo ufw enable
+
             # Restart Nginx and enable Streamlit service
             sudo systemctl restart nginx
             sudo systemctl enable streamlit
             echo "Nginx and systemd setup completed."
           EOF
+
