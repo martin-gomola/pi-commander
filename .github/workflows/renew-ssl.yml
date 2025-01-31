@@ -1,0 +1,47 @@
+name: SSL - Renew Certificate
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 1 * *'  # Runs at 03:00 UTC on the 1st of every month
+
+jobs:
+  renew_ssl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+
+      - name: Renew SSL Certificate
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            echo "Renewing SSL certificate..."
+            sudo certbot renew --quiet --non-interactive
+          EOF
+
+      - name: Verify SSL Certificate Expiry Date
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            EXPIRY_DATE=$(sudo openssl x509 -enddate -noout -in /etc/letsencrypt/live/${{ secrets.DOMAIN_NAME }}/fullchain.pem | cut -d= -f2)
+            echo "SSL Certificate Expiry Date: $EXPIRY_DATE"
+          EOF
+
+      - name: Restart Nginx
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            sudo systemctl restart nginx
+          EOF
+
+      - name: Validate Nginx Configuration
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            sudo nginx -t
+          EOF

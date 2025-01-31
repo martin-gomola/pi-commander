@@ -1,4 +1,4 @@
-name: Setup Oracle Cloud Server
+name: Setup Nginx & Streamlit Server
 
 on:
   workflow_dispatch:
@@ -21,6 +21,20 @@ jobs:
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e  # Stop execution on any error
+            # Stop and disable Streamlit service
+            sudo systemctl stop streamlit
+            sudo systemctl disable streamlit
+
+            # Remove existing symlinks and configuration files
+            sudo rm -f /etc/nginx/sites-enabled/streamlit.conf
+            sudo rm -f /etc/nginx/sites-enabled/streamlit
+            sudo rm -f /etc/nginx/sites-available/streamlit.conf
+            sudo rm -f /etc/systemd/system/streamlit.service
+
+            # Remove any previous streamlit installation or data (optional)
+            # sudo rm -rf /home/ubuntu/cloud/*
+
+            # Reinstall dependencies
             sudo apt update && sudo apt install -y python3-venv python3-pip nginx
             sudo mkdir -p /home/ubuntu/cloud
             sudo chown ubuntu:ubuntu /home/ubuntu/cloud
@@ -40,10 +54,16 @@ jobs:
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
+            # Apply Nginx configuration
             sudo cp /tmp/streamlit.conf /etc/nginx/sites-available/streamlit.conf
             sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/ || true
+
+            # Apply Systemd service file
             sudo cp /tmp/streamlit.service /etc/systemd/system/streamlit.service
             sudo systemctl daemon-reload
+
+            # Restart Nginx and enable Streamlit service
             sudo systemctl restart nginx
+            sudo systemctl enable streamlit
             echo "Nginx and systemd setup completed."
           EOF
