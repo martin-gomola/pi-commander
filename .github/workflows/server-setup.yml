@@ -1,0 +1,49 @@
+name: Setup Oracle Cloud Server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+
+      - name: SSH into Oracle VM and prepare server
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e  # Stop execution on any error
+            sudo apt update && sudo apt install -y python3-venv python3-pip nginx
+            sudo mkdir -p /home/ubuntu/cloud
+            sudo chown ubuntu:ubuntu /home/ubuntu/cloud
+            sudo chmod 700 /home/ubuntu/cloud
+            echo "Server setup completed."
+          EOF
+
+      - name: Copy Nginx configuration
+        run: |
+          scp ${{ github.workspace }}/nginx/streamlit.conf ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/streamlit.conf
+
+      - name: Copy Systemd service file
+        run: |
+          scp ${{ github.workspace }}/systemd/streamlit.service ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/streamlit.service
+
+      - name: Apply Nginx and Systemd configuration
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            sudo cp /tmp/streamlit.conf /etc/nginx/sites-available/streamlit.conf
+            sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/ || true
+            sudo cp /tmp/streamlit.service /etc/systemd/system/streamlit.service
+            sudo systemctl daemon-reload
+            sudo systemctl restart nginx
+            echo "Nginx and systemd setup completed."
+          EOF
