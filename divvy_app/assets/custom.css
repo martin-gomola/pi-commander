@@ -1,0 +1,49 @@
+/* divvy_app/assets/custom.css */
+
+.reportview-container {
+  background-color: #f0f4f8;
+}
+.sidebar .sidebar-content {
+  background-color: #212121;
+  color: white;
+}
+h1 {
+  font-size: 2.5em;
+  color: #4CAF50;
+}
+h2 {
+  font-size: 2em;
+  color: #333;
+}
+.stButton button {
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 5px;
+  font-weight: bold;
+}
+.stButton button:hover {
+  background-color: #000;
+  color: #fff;
+  border-color:#fff;
+}
+
+.stButton button:focus:not(:active) {
+  border-color: white;
+  color: white;
+}
+
+.stTextInput input {
+  background-color: #ffffff;
+  border-radius: 5px;
+}
+.stDataFrame table {
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+.stSelectbox select, .stNumberInput input {
+  border-radius: 5px;
+  padding: 0.5em;
+}
+.stColumns .stColumn {
+  padding: 10px;
+}

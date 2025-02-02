@@ -4,8 +4,8 @@ After=network.target
 
 [Service]
 User=ubuntu
-WorkingDirectory=/home/ubuntu/cloud/divvy_tax
-ExecStart=/home/ubuntu/cloud/divvy_tax/venv/bin/streamlit run app.py --server.address=0.0.0.0 --server.port=8501
+WorkingDirectory=/home/ubuntu/cloud/divvy_app
+ExecStart=/home/ubuntu/cloud/divvy_app/venv/bin/streamlit run app.py --server.address=0.0.0.0 --server.port=8501
 Restart=always
 RestartSec=10
 

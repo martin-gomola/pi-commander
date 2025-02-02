@@ -100,16 +100,27 @@ Project Structure
 .
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml  # GitHub Actions Workflow
-├── divvy_tax/
-│   └── app.py
-│   └── requirements.txt
+│       └── deploy.yml         # GitHub Actions Deployment Workflow
+├── divvy_app/
+│   ├── assets/
+│   │   └── custom.css         # Custom CSS file
+│   ├── views/
+│   │   ├── __init__.py
+│   │   ├── dividends.py       # 2024 Dividend Entry page
+│   │   └── tax_report.py      # 2025 Tax Report page
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   └── data_processing.py  # Functions for processing dividend data
+│   ├── app.py                 # Main entry point for the Streamlit app
+│   └── requirements.txt       # Python dependencies
 ├── nginx/
-│   └── streamlit.conf  # Nginx Configuration File
+│   └── streamlit.conf         # Nginx configuration file
 ├── systemd/
-│   └── streamlit.service  # Systemd Service for Streamlit
+│   └── streamlit.service      # Systemd service file for Streamlit
 └── static/
-    └── index.html  # Static HTML file for Nginx root
+    ├── 404.html
+    └── index.html             # Static HTML file for Nginx root
+
 ```
 Notes
 Streamlit is set to run on port 8501, and the reverse proxy is configured to serve it at /divvy/.
