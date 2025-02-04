@@ -4,7 +4,7 @@ from views import dividends, tax_report
 # Set page configuration
 st.set_page_config(
     page_title="Slovak Tax Dividend Helper",
-    # layout="wide",
+    layout="wide",
 )
 
 # Load custom CSS
