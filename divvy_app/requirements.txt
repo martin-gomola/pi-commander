@@ -1,2 +1,5 @@
 streamlit>=1.10
 pandas>=1.4
+openpyxl
+altair
+yfinance
