@@ -52,17 +52,24 @@ jobs:
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
+            # Clean up the directory if it exists
+            if [ -d /home/ubuntu/cloud/affine ]; then
+              sudo rm -rf /home/ubuntu/cloud/affine
+            fi
+      
+            # Create the directory again
+            mkdir -p /home/ubuntu/cloud/affine
             cd /home/ubuntu/cloud/affine
-            
+      
             # Stop and remove old containers
             docker compose down
-
+      
             # Pull latest images and rebuild Streamlit and Affine
             docker compose pull
             docker compose build
-
+      
             # Start all services
             docker compose up -d
-
+      
             echo "Deployment completed successfully!"
           EOF
