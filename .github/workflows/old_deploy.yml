@@ -22,7 +22,7 @@ jobs:
 
       - name: Copy application files to Oracle Cloud VM
         run: |
-          scp -r ./divvy_app ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
+          scp -r ./streamlit_app ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
 
       - name: Copy static files to temporary directory
         run: |
@@ -52,7 +52,7 @@ jobs:
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
-            cd /home/ubuntu/cloud/divvy_app
+            cd /home/ubuntu/cloud/streamlit_app
             
             # Remove old virtual environment and create a new one
             rm -rf venv

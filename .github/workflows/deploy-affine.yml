@@ -1,4 +1,4 @@
-name: Deploy Affine
+name: Deploy AFFiNE
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -15,33 +16,42 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Copy Affine files to Oracle Cloud VM
+      - name: Copy affine_app files to Oracle Cloud VM
         run: |
-          scp -r ./affine ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
-  
-      - name: Deploy AFFiNE
+          scp -r ./affine_app ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
+
+      - name: Deploy AFFiNE using Docker Compose
         run: |
-          ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+          ssh -o ServerAliveInterval=60 ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
-
-            # Navigate to AFFiNE directory
-            cd /home/ubuntu/cloud/affine
-
-            # Pull the latest docker-compose.yml
-            wget -O docker-compose.yml https://github.com/toeverything/affine/releases/latest/download/docker-compose.yml
-
-            # Create or update the .env file
-            cat > .env <<EOL
-            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-            AFFINE_SERVER_EXTERNAL_URL=${{ secrets.AFFINE_SERVER_EXTERNAL_URL }}
-            EOL
-
-            # Pull the latest images
-            docker compose down
+            cd /home/ubuntu/cloud/affine_app
+      
+            # Stop and remove old containers (if any)
+            docker compose down || true
+      
+            # Export GitHub Secrets as environment variables
+            export DB_USERNAME="${{ secrets.POSTGRES_USER }}"
+            export DB_PASSWORD="${{ secrets.POSTGRES_PASSWORD }}"
+            export DB_DATABASE="affine"
+            export AFFINE_REVISION="stable"
+            export AFFINE_SERVER_EXTERNAL_URL="${{ secrets.AFFINE_SERVER_EXTERNAL_URL }}"
+            export AFFINE_UPLOAD_LOCATION="/data/uploads"
+            export AFFINE_CONFIG_LOCATION="/data/config"
+            export AFFINE_DB_DATA_LOCATION="/data/db"
+      
+            # Ensure environment variables are set
+            echo "Environment variables:"
+            echo "DB_USERNAME=$DB_USERNAME"
+            echo "AFFINE_SERVER_EXTERNAL_URL=$AFFINE_SERVER_EXTERNAL_URL"
+      
+            # Pull the latest AFFiNE image
             docker compose pull
+      
+            # Start AFFiNE with Docker Compose
             docker compose up -d
+      
+            echo "✅ AFFiNE deployed successfully!"
           EOF
+        

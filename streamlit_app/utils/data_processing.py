@@ -1,4 +1,4 @@
-# divvy_app/utils/data_processing.py
+# streamlit_app/utils/data_processing.py
 
 import pandas as pd
 

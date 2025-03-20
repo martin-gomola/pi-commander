@@ -25,7 +25,7 @@ def df_to_text_table(df: pd.DataFrame) -> str:
     for _, row in df.iterrows():
         formatted_row = "  ".join(f"{str(row[col]):<{col_widths[col]}}" for col in df.columns)
         rows.append(formatted_row)
-    table = f"SUMMARY\n\n{header_row}\n{separator}\n" + "\n".join(rows)
+    table = f"SUMMARYSUMMARY\n\n{header_row}\n{separator}\n" + "\n".join(rows)
     return table
 
 def backup_data_to_json(df: pd.DataFrame) -> str:
@@ -120,8 +120,40 @@ def app():
         
         # Process the data to produce a summary
         summary = process_dividends(st.session_state["df_2024"], conversion_rate_2024, COUNTRIES)
-        
-        # Let user choose the summary output format
+
+        # Round Dividends (EUR) and After Tax (EUR) to 2 decimal places
+        if "Dividends (EUR)" in summary.columns:
+            summary["Dividends (EUR)"] = summary["Dividends (EUR)"].round(2)
+        if "After Tax (EUR)" in summary.columns:
+            summary["After Tax (EUR)"] = summary["After Tax (EUR)"].round(2)
+        if "Dividends (USD)" in summary.columns:
+            summary["Dividends (USD)"] = summary["Dividends (USD)"].round(2)
+
+        # Calculate Withheld Tax Amount using subtraction
+        if "Dividends (EUR)" in summary.columns and "After Tax (EUR)" in summary.columns:
+            summary["Withheld Tax (eur)"] = round(summary["Dividends (EUR)"] - summary["After Tax (EUR)"], 2)
+        else:
+            st.error("Columns 'Dividends (EUR)' and 'After Tax (EUR)' are required.")
+            summary["Withheld Tax (eur)"] = 0.0  # Or any other default value
+
+        # Add a total row with separator
+        separator_row = pd.DataFrame([["-" * len(str(val)) for val in summary.iloc[0]]], columns=summary.columns)
+        total_row = summary.sum(numeric_only=True).to_frame().T
+        total_row.insert(0, "Country", "Total")
+        # Round the total row to 2 decimal places
+        for col in total_row.columns:
+            if pd.api.types.is_numeric_dtype(total_row[col]):
+                total_row[col] = round(total_row[col], 2)
+
+        summary = pd.concat([summary, separator_row, total_row], ignore_index=True)
+
+        # Reorder columns
+        desired_order = ["Country", "Dividends (USD)", "Dividends (EUR)", "After Tax (EUR)", "Withheld Tax (eur)"]
+        existing_columns = [col for col in desired_order if col in summary.columns]
+        summary = summary[existing_columns]
+
+
+        # Let user choose the summary output
         st.write("### Dividend Summary")
         output_format = st.radio("Select Summary Output Format", ["Text", "HTML"])
         

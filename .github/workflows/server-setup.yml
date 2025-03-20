@@ -25,6 +25,8 @@ jobs:
             # Remove existing symlinks and configuration files
             sudo rm -f /etc/nginx/sites-enabled/streamlit.conf
             sudo rm -f /etc/nginx/sites-available/streamlit.conf
+            sudo rm -f /etc/nginx/sites-enabled/nginx.conf
+            sudo rm -f /etc/nginx/sites-available/nginx.conf
 
             # Install Docker if not installed
             if ! command -v docker &> /dev/null; then
@@ -46,7 +48,7 @@ jobs:
 
       - name: Copy Nginx configuration
         run: |
-          scp ${{ github.workspace }}/nginx/streamlit.conf ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/streamlit.conf
+          scp ${{ github.workspace }}/nginx/nginx.conf ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/nginx.conf
 
       - name: Apply Nginx configuration
         run: |
@@ -55,10 +57,11 @@ jobs:
 
             # Remove old symlink if exists
             sudo rm -f /etc/nginx/sites-enabled/streamlit.conf
+            sudo rm -f /etc/nginx/sites-enabled/nginx.conf
 
             # Apply Nginx configuration
-            sudo cp /tmp/streamlit.conf /etc/nginx/sites-available/streamlit.conf
-            sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/
+            sudo cp /tmp/nginx.conf /etc/nginx/sites-available/nginx.conf
+            sudo ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/
 
             # Restart Nginx
             sudo systemctl restart nginx

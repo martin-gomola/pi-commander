@@ -22,5 +22,5 @@ terraform.rc
 .env
 */tmp
 
-divvy_app/utils/__pycache__/
-divvy_app/**/**/*.pyc
+streamlit_app/utils/__pycache__/
+streamlit_app/**/**/*.pyc

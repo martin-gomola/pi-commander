@@ -83,10 +83,10 @@ sudo apt install htop
 ```
 
  Edit the Nginx configuration file:
-sudo nano /etc/nginx/sites-available/streamlit.conf
+sudo nano /etc/nginx/sites-available/nginx.conf
 
-sudo rm /etc/nginx/sites-enabled/streamlit.conf
-sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/nginx.conf
+sudo ln -s /etc/nginx/sites-available/nginx.conf /etc/nginx/sites-enabled/
 
 sudo nginx -t
 
@@ -99,20 +99,20 @@ Project Structure
 ```
 .github/
 └── workflows/
-    ├── deploy.yml           # GitHub Actions workflow for deployment
+    ├── deploy-affine.yml    # GitHub Actions workflow for deployment
+    ├── deploy-streamlit.yml # GitHub Actions workflow for deployment
     ├── renew-ssl.yml        # SSL certificate renewal
     ├── server-setup.yml     # Initial server setup
     └── setup-ssl.yml        # SSL configuration
 
 affine/                      # AFFiNE Self-Hosted
 ├── docker-compose.yml       # Docker configuration for AFFiNE
-├── .env                     # Environment variables (GitHub Secrets mapped here)
 ├── data/                    # Persistent storage (database & uploads)
 │   ├── uploads/             # AFFiNE file uploads
 │   ├── config/              # AFFiNE configuration files
 │   └── db/                  # PostgreSQL database storage
 
-divvy_app/                   # Streamlit Dividend Tracker
+streamlit_app/                   # Streamlit Dividend Tracker
 ├── assets/
 │   ├── custom.css
 │   └── tmp/
@@ -127,19 +127,45 @@ divvy_app/                   # Streamlit Dividend Tracker
 │   ├── dividends.py
 │   ├── espp_report.py
 │   └── travel_planner.py
+├── docker-compose.yml       # Docker configuration for Streamlit
+├── Dockerfile
 ├── app.py                   # Streamlit app entry point
 ├── requirements.txt         # Python dependencies
 ├── nginx/
-│   └── streamlit.conf       # Nginx config for Streamlit
+│   └── nginx.conf           # Nginx config
 ├── static/
 │   ├── 404.html
 │   └── index.html           # Static HTML file for Nginx root
-├── systemd/
-│   └── streamlit.service    # Systemd service for Streamlit
 └── terraform-oci/           # Terraform setup for Oracle Cloud
-
 .gitignore
 README.md
 ```
+
 Notes
 Streamlit is set to run on port 8501, and the reverse proxy is configured to serve it at /divvy/.
+
+Affine:
+Have done email sending to work as follow:
+
+Do not make any changes in the affine.env.js file
+Make sure the following variables are set in the compose.yml file at the environment section:
+- MAILER_HOST=smtp.domain.com
+- MAILER_PORT=587
+- MAILER_USER=your_user@domain.com
+- MAILER_PASSWORD=your_user_password
+- MAILER_SENDER=your_user@domain.com
+Be sure to use the app password, not the normal one.
+3. Recreate the container with the command 
+```
+docker compose up --build --force-recreate -d
+```
+
+
+If UFW is active, run:
+
+sudo ufw allow 587/tcp
+sudo ufw allow 465/tcp
+sudo ufw reload
+Then verify:
+
+sudo ufw status

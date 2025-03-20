@@ -38,7 +38,7 @@ def get_stock_data(ticker, start_date, end_date):
     return data[['Close']]
 
 def app():
-    st.title("CSCO Tax Report")
+    st.title("CSCO Report")
 
     uploaded_file = st.file_uploader("Upload My_ESPP_Purchases.xlsx", type=["xlsx"])
 
@@ -124,7 +124,7 @@ def app():
                 "Portfolio Value (EUR)": [f"{current_value * conversion_rate:,.2f}"],
                 "Gain (EUR)": [f"{total_gain_eur:,.2f}"],
                 "Gain After Taxes (EUR)": [f"{gain_after_taxes_eur:,.2f}"],
-                "Total Gain (%)": [f"{total_gain_percentage:,.2f}%"],
+                # "Total Gain (%)": [f"{total_gain_percentage:,.2f}%"],
             })
             st.write("### Portfolio Summary")
             st.code(df_to_text_table(summary_df), language="markdown")

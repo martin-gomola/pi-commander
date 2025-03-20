@@ -17,9 +17,9 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy divvy_app files to Oracle Cloud VM
+      - name: Copy streamlit_app files to Oracle Cloud VM
         run: |
-          scp -r ./divvy_app ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
+          scp -r ./streamlit_app ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
   
       - name: Copy static files to temporary directory
         run: |
@@ -50,21 +50,21 @@ jobs:
             fi
           EOF
 
-      - name: Deploy divvy_app using Docker
+      - name: Deploy streamlit_app using Docker
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
-            # Navigate to divvy_app directory
-            cd /home/ubuntu/cloud/divvy_app
+            # Navigate to streamlit_app directory
+            cd /home/ubuntu/cloud/streamlit_app
 
-            # Build the Docker image for divvy_app
-            docker build -t divvy_app .
+            # Build the Docker image for streamlit_app
+            docker build -t streamlit_app .
 
             # Stop and remove old containers
             docker compose down
 
-            # Start divvy_app container
+            # Start streamlit_app container
             docker compose up -d
 
-            echo "divvy_app deployed successfully!"
+            echo "streamlit_app deployed successfully!"
           EOF
