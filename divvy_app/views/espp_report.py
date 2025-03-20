@@ -109,18 +109,26 @@ def app():
             # Assuming a conversion rate (could be dynamically fetched)
             conversion_rate = 0.92  # Example conversion rate USD to EUR
             total_gain_eur = total_gain_usd * conversion_rate
+            total_cost_eur = total_cost * conversion_rate
+            # Calculate gain after taxes (33% tax rate)
+            tax_rate = 0.33
+            gain_after_taxes_usd = total_gain_usd * (1 - tax_rate)
+            gain_after_taxes_eur = gain_after_taxes_usd * conversion_rate
+
+            # Calculate total gain percentage
+            total_gain_percentage = (total_gain_eur / total_cost_eur) * 100 if total_cost_eur else 0
 
             # Display summary
             summary_df = pd.DataFrame({
                 "CSCO Price": [f"{latest_csco_price:,.2f}"],
                 "Portfolio Value (EUR)": [f"{current_value * conversion_rate:,.2f}"],
-                "Portfolio Value (USD)": [f"{current_value:,.2f}"],
                 "Gain (EUR)": [f"{total_gain_eur:,.2f}"],
-                "Gain (USD)": [f"{total_gain_usd:,.2f}"],
+                "Gain After Taxes (EUR)": [f"{gain_after_taxes_eur:,.2f}"],
+                "Total Gain (%)": [f"{total_gain_percentage:,.2f}%"],
             })
             st.write("### Portfolio Summary")
             st.code(df_to_text_table(summary_df), language="markdown")
-        
+
         except Exception as e:
             st.error(f"An error occurred: {e}")
 

@@ -1,0 +1,36 @@
+{
+    "start_date": "2025-03-14",
+    "duration_option": "Number of Days",
+    "num_days": 10,
+    "end_date": "2025-03-23",
+    "locations": [
+        "Phuket",
+        "Krabi (Ao Nang)",
+        "Phi Phi",
+        "Koh Lanta",
+        "Koh Mook",
+        "Koh Lipe",
+        "Kuala Lumpur",
+        "Budapest"
+    ],
+    "accommodations": [
+        "Hotel",
+        "Bungalow",
+        "Apartment"
+    ],
+    "transports": [
+        "Flight",
+        "Train",
+        "Bus",
+        "Ferry",
+        "Taxi",
+        "Car,"
+    ],
+    "activities": [
+        "Sightseeing",
+        "Relaxing",
+        "Hiking",
+        "Swimming",
+        "Shopping"
+    ]
+}

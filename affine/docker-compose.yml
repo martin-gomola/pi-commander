@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  affine-db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - affine-db:/var/lib/postgresql/data
+
+  affine-backend:
+    image: toeverything/affine-backend:latest
+    restart: always
+    depends_on:
+      - affine-db
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@affine-db:5432/${POSTGRES_DB}
+    ports:
+      - "4000:4000"
+
+  affine-frontend:
+    image: toeverything/affine-frontend:latest
+    restart: always
+    depends_on:
+      - affine-backend
+    ports:
+      - "3000:3000"
+
+  streamlit-app:
+    build:
+      context: ../divvy_app    # Reference divvy_app from the parent directory
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8501:8501"
+    depends_on:
+      - affine-db
+
+volumes:
+  affine-db:
