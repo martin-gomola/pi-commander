@@ -1,4 +1,4 @@
-name: Deploy Streamlit and Static Files
+name: Old deploy Streamlit and Static Files
 
 on:
   push:
