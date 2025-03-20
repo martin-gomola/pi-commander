@@ -32,20 +32,25 @@ jobs:
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
-            # Remove the old static directory if it exists
-            sudo rm -rf /var/www/html/static
+            # Check if static files exist in /tmp/static
+            if [ -d /tmp/static ] && [ "$(ls -A /tmp/static)" ]; then
+              # Remove the old static directory if it exists
+              sudo rm -rf /var/www/html/static
 
-            # Create new static directory
-            sudo mkdir -p /var/www/html/static
+              # Create new static directory
+              sudo mkdir -p /var/www/html/static
 
-            # Move the new static files from /tmp to /var/www/html/static
-            sudo mv /tmp/static/* /var/www/html/static/
+              # Move the new static files from /tmp to /var/www/html/static
+              sudo mv /tmp/static/* /var/www/html/static/
 
-            # Set proper permissions and ownership
-            sudo chown -R ubuntu:ubuntu /var/www/html/static
-            sudo chmod -R 755 /var/www/html/static
+              # Set proper permissions and ownership
+              sudo chown -R ubuntu:ubuntu /var/www/html/static
+              sudo chmod -R 755 /var/www/html/static
 
-            echo "Static files deployed successfully!"
+              echo "Static files deployed successfully!"
+            else
+              echo "No static files to deploy"
+            fi
           EOF
 
       - name: Deploy using Docker Compose
