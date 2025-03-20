@@ -1,4 +1,4 @@
-name: Setup Nginx & Streamlit Server
+name: Setup Nginx & Dockerized Streamlit Server
 
 on:
   workflow_dispatch:
@@ -37,7 +37,7 @@ jobs:
               echo "Docker is already installed."
             fi
 
-            # Install Docker Compose
+            # Install Docker Compose if not installed
             if ! command -v docker-compose &> /dev/null; then
               echo "Docker Compose not found. Installing..."
               sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
@@ -47,18 +47,13 @@ jobs:
               echo "Docker Compose is already installed."
             fi
 
-            # Stop and disable Streamlit service
-            sudo systemctl stop streamlit
-            sudo systemctl disable streamlit
+            # Stop and disable previous Streamlit service if exists
+            sudo systemctl stop streamlit || true
+            sudo systemctl disable streamlit || true
 
-            # Remove existing symlinks and configuration files
-            sudo rm -f /etc/nginx/sites-enabled/streamlit.conf
-            sudo rm -f /etc/nginx/sites-enabled/streamlit
-            sudo rm -f /etc/nginx/sites-available/streamlit.conf
-            sudo rm -f /etc/systemd/system/streamlit.service
-
-            # Remove any previous streamlit installation or data (optional)
-            # sudo rm -rf /home/ubuntu/cloud/*
+            # Clean up old Docker containers if they exist
+            sudo docker ps -q --filter "name=streamlit" | xargs -r sudo docker stop
+            sudo docker ps -a -q --filter "name=streamlit" | xargs -r sudo docker rm
 
             # Reinstall dependencies
             sudo apt update && sudo apt install -y python3-venv python3-pip nginx ufw
@@ -84,7 +79,7 @@ jobs:
             sudo cp /tmp/streamlit.conf /etc/nginx/sites-available/streamlit.conf
             sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/ || true
 
-            # Apply Systemd service file
+            # Apply Systemd service file for Streamlit container
             sudo cp /tmp/streamlit.service /etc/systemd/system/streamlit.service
             sudo systemctl daemon-reload
 
@@ -97,8 +92,29 @@ jobs:
             # Enable and start UFW
             sudo ufw enable
 
-            # Restart Nginx and enable Streamlit service
+            # Restart Nginx
             sudo systemctl restart nginx
+            echo "Nginx setup completed."
+          EOF
+
+      - name: Deploy Streamlit with Docker
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            # Pull the latest Docker image for Streamlit
+            cd /home/ubuntu/cloud
+            if [ ! -d "streamlit" ]; then
+              git clone https://github.com/your-repo/streamlit.git  # Replace with your repository URL
+            fi
+            cd streamlit
+
+            # Build and run the Streamlit container
+            sudo docker-compose down || true
+            sudo docker-compose up -d
+
+            # Enable and start the container after deployment
             sudo systemctl enable streamlit
-            echo "Nginx and systemd setup completed."
+            sudo systemctl start streamlit
+
+            echo "Streamlit deployed in Docker successfully!"
           EOF
