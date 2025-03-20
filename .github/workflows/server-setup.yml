@@ -1,4 +1,4 @@
-name: Setup Nginx & Dockerized Streamlit Server
+name: Setup Nginx & Streamlit Server
 
 on:
   workflow_dispatch:
@@ -22,44 +22,25 @@ jobs:
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e  # Stop execution on any error
 
+            # Remove existing symlinks and configuration files
+            sudo rm -f /etc/nginx/sites-enabled/streamlit.conf
+            sudo rm -f /etc/nginx/sites-available/streamlit.conf
+
             # Install Docker if not installed
             if ! command -v docker &> /dev/null; then
-              echo "Docker not found. Installing..."
-              sudo apt-get update
-              sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-              sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-              sudo apt-get update
-              sudo apt-get install -y docker-ce
-              sudo systemctl enable docker
-              sudo systemctl start docker
-            else
-              echo "Docker is already installed."
+              echo "Docker not found. Installing Docker..."
+              sudo apt update
+              sudo apt install -y docker.io
+              sudo systemctl enable --now docker
             fi
 
-            # Install Docker Compose if not installed
-            if ! command -v docker-compose &> /dev/null; then
-              echo "Docker Compose not found. Installing..."
-              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
-                -o /usr/local/bin/docker-compose
-              sudo chmod +x /usr/local/bin/docker-compose
-            else
-              echo "Docker Compose is already installed."
-            fi
+            # Install Nginx
+            sudo apt update
+            sudo apt install -y nginx
 
-            # Stop and disable previous Streamlit service if exists
-            sudo systemctl stop streamlit || true
-            sudo systemctl disable streamlit || true
+            # Restart Nginx (if needed)
+            sudo systemctl restart nginx
 
-            # Clean up old Docker containers if they exist
-            sudo docker ps -q --filter "name=streamlit" | xargs -r sudo docker stop
-            sudo docker ps -a -q --filter "name=streamlit" | xargs -r sudo docker rm
-
-            # Reinstall dependencies
-            sudo apt update && sudo apt install -y python3-venv python3-pip nginx ufw
-            sudo mkdir -p /home/ubuntu/cloud
-            sudo chown ubuntu:ubuntu /home/ubuntu/cloud
-            sudo chmod 700 /home/ubuntu/cloud
             echo "Server setup completed."
           EOF
 
@@ -67,54 +48,19 @@ jobs:
         run: |
           scp ${{ github.workspace }}/nginx/streamlit.conf ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/streamlit.conf
 
-      - name: Copy Systemd service file
-        run: |
-          scp ${{ github.workspace }}/systemd/streamlit.service ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/streamlit.service
-
-      - name: Apply Nginx and Systemd configuration
+      - name: Apply Nginx configuration
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
+
+            # Remove old symlink if exists
+            sudo rm -f /etc/nginx/sites-enabled/streamlit.conf
+
             # Apply Nginx configuration
             sudo cp /tmp/streamlit.conf /etc/nginx/sites-available/streamlit.conf
-            sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/ || true
-
-            # Apply Systemd service file for Streamlit container
-            sudo cp /tmp/streamlit.service /etc/systemd/system/streamlit.service
-            sudo systemctl daemon-reload
-
-            # Allow Nginx Full profile through UFW
-            sudo ufw allow 'Nginx Full'
-
-            # Allow traffic on port 8501 (Streamlit)
-            sudo ufw allow 8501
-
-            # Enable and start UFW
-            sudo ufw enable
+            sudo ln -s /etc/nginx/sites-available/streamlit.conf /etc/nginx/sites-enabled/
 
             # Restart Nginx
             sudo systemctl restart nginx
             echo "Nginx setup completed."
-          EOF
-
-      - name: Deploy Streamlit with Docker
-        run: |
-          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-            set -e
-            # Pull the latest Docker image for Streamlit
-            cd /home/ubuntu/cloud
-            if [ ! -d "streamlit" ]; then
-              git clone https://github.com/your-repo/streamlit.git  # Replace with your repository URL
-            fi
-            cd streamlit
-
-            # Build and run the Streamlit container
-            sudo docker-compose down || true
-            sudo docker-compose up -d
-
-            # Enable and start the container after deployment
-            sudo systemctl enable streamlit
-            sudo systemctl start streamlit
-
-            echo "Streamlit deployed in Docker successfully!"
           EOF

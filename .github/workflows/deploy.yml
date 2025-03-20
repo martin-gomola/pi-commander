@@ -20,7 +20,7 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy application files to Oracle Cloud VM
+      - name: Copy divvy_app files to Oracle Cloud VM
         run: |
           scp -r ./divvy_app ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
 
@@ -53,28 +53,47 @@ jobs:
             fi
           EOF
 
-      - name: Deploy using Docker Compose
+      - name: Deploy divvy_app using Docker
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
-            # Clean up the directory if it exists
-            if [ -d /home/ubuntu/cloud/affine ]; then
-              sudo rm -rf /home/ubuntu/cloud/affine
-            fi
-      
-            # Create the directory again
-            mkdir -p /home/ubuntu/cloud/affine
-            cd /home/ubuntu/cloud/affine
-      
+            # Navigate to divvy_app directory
+            cd /home/ubuntu/cloud/divvy_app
+
+            # Build the Docker image for divvy_app
+            docker build -t divvy_app .
+
             # Stop and remove old containers
             docker compose down
-      
-            # Pull latest images and rebuild Streamlit and Affine
+
+            # Start divvy_app container
+            docker compose up -d
+
+            echo "divvy_app deployed successfully!"
+          EOF
+
+      - name: Deploy Affine using Docker Compose
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            # Ensure the affine directory is available
+            if [ ! -d /home/ubuntu/cloud/affine ]; then
+              echo "Affine directory does not exist, creating it."
+              mkdir -p /home/ubuntu/cloud/affine
+            fi
+
+            # Navigate to the affine directory
+            cd /home/ubuntu/cloud/affine
+
+            # Stop and remove old containers
+            docker compose down
+
+            # Pull latest images and rebuild Affine (if necessary)
             docker compose pull
             docker compose build
-      
+
             # Start all services
             docker compose up -d
-      
-            echo "Deployment completed successfully!"
+
+            echo "Affine deployment completed successfully!"
           EOF
