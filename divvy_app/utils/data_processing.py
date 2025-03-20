@@ -8,7 +8,7 @@ def process_dividends(df: pd.DataFrame, conversion_rate: float, countries: list)
         lambda row: row["Dividends"] / conversion_rate if row["Currency"] == "USD" else row["Dividends"],
         axis=1
     )
-    df["After Tax Dividends (EUR)"] = df.apply(
+    df["After Tax (EUR)"] = df.apply(
         lambda row: row["Dividends (EUR)"] * (1 - row["Tax %"] / 100),
         axis=1
     )
@@ -16,7 +16,7 @@ def process_dividends(df: pd.DataFrame, conversion_rate: float, countries: list)
     # Create summary by country
     summary = df.groupby("Country").agg({
         "Dividends (EUR)": "sum",
-        "After Tax Dividends (EUR)": "sum"
+        "After Tax (EUR)": "sum"
     }).reset_index()
 
     # Add USD dividend summary where applicable

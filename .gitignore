@@ -22,6 +22,5 @@ terraform.rc
 .env
 */tmp
 
-__pycache__/
-*.pyc
-*.pyo
+divvy_app/utils/__pycache__/
+divvy_app/**/**/*.pyc
