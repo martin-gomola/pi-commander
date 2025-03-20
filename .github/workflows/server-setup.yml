@@ -21,6 +21,32 @@ jobs:
         run: |
           ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e  # Stop execution on any error
+
+            # Install Docker if not installed
+            if ! command -v docker &> /dev/null; then
+              echo "Docker not found. Installing..."
+              sudo apt-get update
+              sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+              sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+              sudo apt-get update
+              sudo apt-get install -y docker-ce
+              sudo systemctl enable docker
+              sudo systemctl start docker
+            else
+              echo "Docker is already installed."
+            fi
+
+            # Install Docker Compose
+            if ! command -v docker-compose &> /dev/null; then
+              echo "Docker Compose not found. Installing..."
+              sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" \
+                -o /usr/local/bin/docker-compose
+              sudo chmod +x /usr/local/bin/docker-compose
+            else
+              echo "Docker Compose is already installed."
+            fi
+
             # Stop and disable Streamlit service
             sudo systemctl stop streamlit
             sudo systemctl disable streamlit
@@ -76,4 +102,3 @@ jobs:
             sudo systemctl enable streamlit
             echo "Nginx and systemd setup completed."
           EOF
-
