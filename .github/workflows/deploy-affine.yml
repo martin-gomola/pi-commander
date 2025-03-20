@@ -1,0 +1,47 @@
+name: Deploy Affine
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+
+      - name: Copy Affine files to Oracle Cloud VM
+        run: |
+          scp -r ./affine ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
+  
+      - name: Deploy AFFiNE
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+
+            # Navigate to AFFiNE directory
+            cd /home/ubuntu/cloud/affine
+
+            # Pull the latest docker-compose.yml
+            wget -O docker-compose.yml https://github.com/toeverything/affine/releases/latest/download/docker-compose.yml
+
+            # Create or update the .env file
+            cat > .env <<EOL
+            POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+            AFFINE_SERVER_EXTERNAL_URL=${{ secrets.AFFINE_SERVER_EXTERNAL_URL }}
+            EOL
+
+            # Pull the latest images
+            docker compose down
+            docker compose pull
+            docker compose up -d
+          EOF

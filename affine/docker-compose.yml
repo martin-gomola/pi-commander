@@ -1,43 +1,66 @@
-version: '3.8'
-
+name: affine
 services:
-  affine-db:
-    image: postgres:15
-    restart: always
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+  affine:
+    image: ghcr.io/toeverything/affine-graphql:${{ secrets.AFFINE_REVISION }}
+    container_name: affine_server
+    ports:
+      - "${{ secrets.AFFINE_PORT }}:3010"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      affine_migration:
+        condition: service_completed_successfully
     volumes:
-      - affine-db:/var/lib/postgresql/data
-
-  affine-backend:
-    image: toeverything/affine-backend:latest
-    restart: always
-    depends_on:
-      - affine-db
+      - "${{ secrets.AFFINE_UPLOAD_LOCATION }}:/root/.affine/storage"
+      - "${{ secrets.AFFINE_CONFIG_LOCATION }}:/root/.affine/config"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@affine-db:5432/${POSTGRES_DB}
-    ports:
-      - "4000:4000"
+      - REDIS_SERVER_HOST=redis
+      - DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
+    restart: unless-stopped
 
-  affine-frontend:
-    image: toeverything/affine-frontend:latest
-    restart: always
+  affine_migration:
+    image: ghcr.io/toeverything/affine-graphql:${{ secrets.AFFINE_REVISION }}
+    container_name: affine_migration_job
+    volumes:
+      - "${{ secrets.AFFINE_UPLOAD_LOCATION }}:/root/.affine/storage"
+      - "${{ secrets.AFFINE_CONFIG_LOCATION }}:/root/.affine/config"
+    command: ['sh', '-c', 'node ./scripts/self-host-predeploy.js']
+    environment:
+      - REDIS_SERVER_HOST=redis
+      - DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@postgres:5432/${{ secrets.POSTGRES_DB }}
     depends_on:
-      - affine-backend
-    ports:
-      - "3000:3000"
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  streamlit-app:
-    build:
-      context: ../divvy_app    # Reference divvy_app from the parent directory
-      dockerfile: Dockerfile
-    restart: always
-    ports:
-      - "8501:8501"
-    depends_on:
-      - affine-db
+  redis:
+    image: redis
+    container_name: redis
+    healthcheck:
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
-volumes:
-  affine-db:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    volumes:
+      - "${{ secrets.AFFINE_DB_DATA_LOCATION }}:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_INITDB_ARGS: '--data-checksums'
+      POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test:
+        ['CMD', 'pg_isready', '-U', "${{ secrets.POSTGRES_USER }}", '-d', "${{ secrets.POSTGRES_DB }}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped

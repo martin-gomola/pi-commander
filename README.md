@@ -97,30 +97,49 @@ sudo systemctl restart nginx
 Project Structure
 
 ```
-.
-├── .github/
-│   └── workflows/
-│       └── deploy.yml         # GitHub Actions Deployment Workflow
-├── divvy_app/
-│   ├── assets/
-│   │   └── custom.css         # Custom CSS file
-│   ├── views/
-│   │   ├── __init__.py
-│   │   ├── dividends.py       # 2024 Dividend Entry page
-│   │   └── tax_report.py      # 2025 Tax Report page
-│   ├── utils/
-│   │   ├── __init__.py
-│   │   └── data_processing.py  # Functions for processing dividend data
-│   ├── app.py                 # Main entry point for the Streamlit app
-│   └── requirements.txt       # Python dependencies
-├── nginx/
-│   └── streamlit.conf         # Nginx configuration file
-├── systemd/
-│   └── streamlit.service      # Systemd service file for Streamlit
-└── static/
-    ├── 404.html
-    └── index.html             # Static HTML file for Nginx root
+.github/
+└── workflows/
+    ├── deploy.yml           # GitHub Actions workflow for deployment
+    ├── renew-ssl.yml        # SSL certificate renewal
+    ├── server-setup.yml     # Initial server setup
+    └── setup-ssl.yml        # SSL configuration
 
+affine/                      # AFFiNE Self-Hosted
+├── docker-compose.yml       # Docker configuration for AFFiNE
+├── .env                     # Environment variables (GitHub Secrets mapped here)
+├── data/                    # Persistent storage (database & uploads)
+│   ├── uploads/             # AFFiNE file uploads
+│   ├── config/              # AFFiNE configuration files
+│   └── db/                  # PostgreSQL database storage
+
+divvy_app/                   # Streamlit Dividend Tracker
+├── assets/
+│   ├── custom.css
+│   └── tmp/
+├── utils/
+│   ├── __pycache__/
+│   ├── __init__.py
+│   └── data_processing.py
+├── views/
+│   ├── __pycache__/
+│   ├── __init__.py
+│   ├── config.json
+│   ├── dividends.py
+│   ├── espp_report.py
+│   └── travel_planner.py
+├── app.py                   # Streamlit app entry point
+├── requirements.txt         # Python dependencies
+├── nginx/
+│   └── streamlit.conf       # Nginx config for Streamlit
+├── static/
+│   ├── 404.html
+│   └── index.html           # Static HTML file for Nginx root
+├── systemd/
+│   └── streamlit.service    # Systemd service for Streamlit
+└── terraform-oci/           # Terraform setup for Oracle Cloud
+
+.gitignore
+README.md
 ```
 Notes
 Streamlit is set to run on port 8501, and the reverse proxy is configured to serve it at /divvy/.

@@ -1,9 +1,6 @@
 name: Deploy Streamlit and Static Files
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -23,7 +20,7 @@ jobs:
       - name: Copy divvy_app files to Oracle Cloud VM
         run: |
           scp -r ./divvy_app ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/home/ubuntu/cloud/
-
+  
       - name: Copy static files to temporary directory
         run: |
           scp -r ${{ github.workspace }}/static/. ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/static
@@ -70,30 +67,4 @@ jobs:
             docker compose up -d
 
             echo "divvy_app deployed successfully!"
-          EOF
-
-      - name: Deploy Affine using Docker Compose
-        run: |
-          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
-            set -e
-            # Ensure the affine directory is available
-            if [ ! -d /home/ubuntu/cloud/affine ]; then
-              echo "Affine directory does not exist, creating it."
-              mkdir -p /home/ubuntu/cloud/affine
-            fi
-
-            # Navigate to the affine directory
-            cd /home/ubuntu/cloud/affine
-
-            # Stop and remove old containers
-            docker compose down
-
-            # Pull latest images and rebuild Affine (if necessary)
-            docker compose pull
-            docker compose build
-
-            # Start all services
-            docker compose up -d
-
-            echo "Affine deployment completed successfully!"
           EOF

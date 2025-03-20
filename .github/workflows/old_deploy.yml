@@ -1,9 +1,9 @@
 name: Old deploy Streamlit and Static Files
 
 on:
-  push:
-    branches:
-      - main
+  # push:
+  #   branches:
+  #     - main
   workflow_dispatch:
 
 jobs:
