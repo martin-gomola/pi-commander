@@ -21,6 +21,7 @@ terraform.rc
 
 .env
 */tmp
+*tmp
 
 streamlit_app/utils/__pycache__/
 streamlit_app/**/**/*.pyc

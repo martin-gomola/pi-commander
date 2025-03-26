@@ -1,0 +1,35 @@
+name: Restore AFFiNE Backup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restore_backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+
+      - name: Run restore scripts on server
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            set -e
+            echo "Starting AFFiNE backup restore..."
+            
+            echo "Restoring application data..."
+            chmod +x /srv/affine-backups/affine-restore-appdata.sh
+            /srv/affine-backups/affine-restore-appdata.sh
+            
+            echo "Restoring database..."
+            chmod +x /srv/affine-backups/affine-restore-db.sh
+            /srv/affine-backups/affine-restore-db.sh
+
+            echo "✅ Restore completed successfully!"
+          EOF

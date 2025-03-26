@@ -23,8 +23,6 @@ jobs:
             set -e  # Stop execution on any error
 
             # Remove existing symlinks and configuration files
-            sudo rm -f /etc/nginx/sites-enabled/streamlit.conf
-            sudo rm -f /etc/nginx/sites-available/streamlit.conf
             sudo rm -f /etc/nginx/sites-enabled/nginx.conf
             sudo rm -f /etc/nginx/sites-available/nginx.conf
 
@@ -56,7 +54,6 @@ jobs:
             set -e
 
             # Remove old symlink if exists
-            sudo rm -f /etc/nginx/sites-enabled/streamlit.conf
             sudo rm -f /etc/nginx/sites-enabled/nginx.conf
 
             # Apply Nginx configuration

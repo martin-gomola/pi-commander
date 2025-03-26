@@ -1,0 +1,37 @@
+name: Backup - Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup_backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+
+      - name: Ensure backup directory exists
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            sudo mkdir -p /srv/affine-backups/
+            sudo chown ${{ secrets.USERNAME }}:${{ secrets.USERNAME }} /srv/affine-backups/
+            echo "✅ Backup directory created and permissions set!"
+          EOF
+
+      - name: Copy backup folder to server
+        run: |
+          scp -r ./affine_app/backup/* ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/srv/affine-backups/
+
+      - name: Set execute permissions on scripts
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
+            chmod +x /srv/affine-backups/*.sh
+            echo "✅ Backup scripts copied and permissions set!"
+          EOF
