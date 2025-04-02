@@ -1,18 +1,11 @@
-name: Server Maintenance & Keep Alive
+name: Server Maintenance
 
 on:
   schedule:
-    - cron: '*/30 * * * *'  # Runs every 30 minutes to keep server alive
     - cron: '0 0 * * *'  # Runs daily at 00:00 UTC (1 AM Bratislava time) to update & reboot
   workflow_dispatch:  # Allows manual execution
 
 jobs:
-  keep_alive:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Ping Server (road-work.gd)
-        run: curl -s --head https://matie.run.place > /dev/null || echo "Ping failed, but continuing."
-
   update_and_reboot:
     runs-on: ubuntu-latest
     steps:
