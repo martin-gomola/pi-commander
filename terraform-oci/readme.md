@@ -1,1 +1,0 @@
-This is a Terraform repo inspired by [article](https://medium.com/@Phoenixforge/a-weekend-project-with-k3s-and-oracle-cloud-free-tier-99eda1aa49a0) on installing K3s hybrid architecture cluster in the Oracle Cloud using their always free tier.
