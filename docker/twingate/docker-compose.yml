@@ -1,0 +1,21 @@
+services:
+  twingate-connector:
+    env_file:
+      - .env
+    image: twingate/connector:1
+    container_name: twingate-connector
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      TWINGATE_NETWORK: ${TWINGATE_NETWORK}
+      TWINGATE_ACCESS_TOKEN: ${TWINGATE_ACCESS_TOKEN}
+      TWINGATE_REFRESH_TOKEN: ${TWINGATE_REFRESH_TOKEN}
+      TWINGATE_LABEL_HOSTNAME: "twingate-connector"
+      TWINGATE_LABEL_DEPLOYED_BY: "docker"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    stop_grace_period: 10s
+    # Note: Uses host networking for direct network access

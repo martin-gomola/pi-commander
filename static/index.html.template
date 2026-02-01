@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi-Commander - Infrastructure Online</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 60px 40px;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        h1 {
+            color: #1f2937;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        
+        .services {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .service {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+        }
+        
+        .service:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+        
+        .service-name {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .service-status {
+            color: #10b981;
+            font-size: 14px;
+        }
+        
+        .footer {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .ssl-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #10b981;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 20px;
+        }
+        
+        .checkmark {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status-badge">🚀 OPERATIONAL</div>
+        
+        <h1>Pi-Commander</h1>
+        <p class="subtitle">Core Infrastructure Online</p>
+        
+        <div class="services">
+            <div class="service">
+                <span class="service-name">🔒 Nginx Proxy Manager</span>
+                <span class="service-status">✓ Running</span>
+            </div>
+            
+            <div class="service">
+                <span class="service-name">🛡️ AdGuard Home</span>
+                <span class="service-status">✓ Running</span>
+            </div>
+            
+            <div class="service">
+                <span class="service-name">🌐 Dynamic DNS</span>
+                <span class="service-status">✓ Active</span>
+            </div>
+            
+            <div class="service">
+                <span class="service-name">🔐 VPN Access</span>
+                <span class="service-status">✓ Connected</span>
+            </div>
+        </div>
+        
+        <div class="ssl-badge">
+            <span class="checkmark">✓</span>
+            SSL Certificate Active
+        </div>
+        
+        <div class="footer">
+            <p>
+                Powered by <a href="https://github.com/martin-gomola/pi-commander" target="_blank">Pi-Commander</a>
+            </p>
+            <p style="margin-top: 10px; font-size: 12px;">
+                If you can see this page with HTTPS, your infrastructure is working! 🎉
+            </p>
+        </div>
+    </div>
+</body>
+</html>
