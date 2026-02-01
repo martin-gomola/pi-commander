@@ -1,0 +1,34 @@
+services:
+  app:
+    image: jc21/nginx-proxy-manager:latest
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${NGINX_PROXY_HTTP}:80"
+      - "${NGINX_PROXY_ADMIN}:81"
+      - "${NGINX_PROXY_HTTPS}:443"
+    volumes:
+      - /srv/docker/nginx-proxy-manager/data:/data
+      - /srv/docker/nginx-proxy-manager/letsencrypt:/etc/letsencrypt
+      - ../../static:/static:ro
+    environment:
+      TZ: "Europe/Bratislava"
+      DISABLE_IPV6: "true"
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD}
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:81/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    security_opt:
+      - no-new-privileges:true
+    stop_grace_period: 10s

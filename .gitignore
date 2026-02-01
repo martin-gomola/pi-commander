@@ -1,0 +1,66 @@
+# Environment files
+*.env
+.env
+!.env.example
+
+# Symlinks to .env in docker directories (deprecated)
+docker/*/.env
+
+# Claude AI
+.claude/
+
+# Temporary files
+tmp/
+*/tmp/
+*.tmp
+*~
+.DS_Store
+notes.md
+# Secrets and credentials
+*.secret
+*.key
+*.pem
+*.crt
+*.p12
+*password*
+*token*
+*credential*
+
+# Backup files
+*.backup
+*.bak
+backup-*/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker volumes (shouldn't be in repo)
+volumes/
+data/
+
+# Mac
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+
+# Static files (custom per server)
+static/index.html
+static/custom.html
+
+# Keep templates in git
+!static/index.html.template
+!static/404.html
+
+# GeoIP databases (large files, updated monthly)
+docker/plausible/geoip/*.mmdb

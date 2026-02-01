@@ -1,0 +1,20 @@
+services:
+  duckdns:
+    image: lscr.io/linuxserver/duckdns:latest
+    container_name: duckdns
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PUID: 1000
+      PGID: 1000
+      TZ: ${TZ:-Europe/Bratislava}
+      SUBDOMAINS: ${DUCKDNS_SUBDOMAIN}
+      TOKEN: ${DUCKDNS_TOKEN}
+      UPDATE_IP: ipv4
+      LOG_FILE: false
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
