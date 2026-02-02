@@ -2,12 +2,12 @@
 
 ## Static Site Configuration
 
-To serve static files from `/static` directory for martingomola.com:
+To serve static files from `/static` directory for yourdomain.com:
 
 ### Proxy Host Setup
 
 **Details Tab:**
-- Domain Names: `martingomola.com`, `www.martingomola.com`
+- Domain Names: `yourdomain.com`, `www.yourdomain.com`
 - Scheme: `http`
 - Forward Hostname/IP: `localhost`
 - Forward Port: `80`
@@ -20,8 +20,8 @@ Add a custom location for `/` with this configuration:
 
 ```nginx
 # Redirect www to non-www
-if ($host = 'www.martingomola.com') {
-    return 301 https://martingomola.com$request_uri;
+if ($host = 'www.yourdomain.com') {
+    return 301 https://yourdomain.com$request_uri;
 }
 
 location / {

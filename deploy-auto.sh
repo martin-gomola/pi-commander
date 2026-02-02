@@ -68,8 +68,8 @@ deploy_service() {
         return 1
     fi
     
-    if [ ! -f "${service_dir}/docker compose.yml" ]; then
-        warn "No docker compose.yml in $service_dir"
+    if [ ! -f "${service_dir}/docker-compose.yml" ]; then
+        warn "No docker-compose.yml in $service_dir"
         return 1
     fi
     

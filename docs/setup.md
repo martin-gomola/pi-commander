@@ -138,7 +138,7 @@ After configuring Cloudflare, verify your setup:
 
 2. Add proxy host in NPM:
    - Domain: `home.yourdomain.com`
-   - Forward to: `nginx-proxy-manager:80`
+   - Forward to: `your-server-ip:80`
    - Enable SSL with Let's Encrypt
 
 3. Visit `https://home.yourdomain.com`
@@ -155,6 +155,54 @@ make health          # Run health checks
 make logs            # View all logs
 make help            # Show all commands
 lazydocker           # Docker UI
+```
+
+---
+
+## Automated Tasks (Cron Jobs)
+
+Set up automated backups and maintenance.
+
+### Weekly Backups
+
+```bash
+make backup-cron-setup
+```
+
+Runs every Sunday at 2 AM. Backs up:
+- All Docker service data (`/srv/docker/`)
+- SSL certificates and NPM database
+
+Backups stored in `/srv/backups/` with 7-week retention.
+
+### Weekly Reboot (Optional)
+
+```bash
+make reboot-cron-setup
+```
+
+Reboots server every Sunday at 4 AM. Keeps things fresh.
+
+### Check Scheduled Tasks
+
+```bash
+make cron-status
+```
+
+### Remove Cron Jobs
+
+```bash
+make backup-cron-remove
+make reboot-cron-remove
+```
+
+### Manual Backup
+
+Run anytime:
+
+```bash
+make backup           # Full backup
+make backup-ssl       # SSL certificates only
 ```
 
 ---

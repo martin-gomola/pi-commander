@@ -2,6 +2,18 @@
 
 Core infrastructure for self-hosted servers - Reverse proxy, DNS, VPN, and DDNS management.
 
+## Why I built this
+
+I had an old Raspberry Pi 3B collecting dust. I wanted to turn it into something useful, a minimal home server that just works. Later I upgraded to a Zotac mini PC for a bit more headroom.
+
+I tried Portainer, Pi-hole, Technitium, plain Nginx and WireGuard before settling on lazydocker, AdGuard, NPM and Twingate. The lesson: if you pick only what you need, self-hosting doesn't have to be complicated. Pi-Commander runs stable on my setup (40+ days uptime so far) because it does less, not more.
+
+I switched to lazydocker for quick container monitoring and log checks. Combined with Cursor's SSH skill, I can manage the server runtime directly from my editor.
+
+If you want a simple foundation for your home server, this might save you some time.
+
+---
+
 ## Quick Start
 
 ### 🚀 Easy Install
@@ -74,18 +86,27 @@ make deploy-all
 ## Architecture
 
 ```
-    INTERNET → Cloudflare CDN
-          ↓
-    ┌────────────────────┐
-    │   NPM (:80/443)    │  ← Reverse proxy + SSL
-    └─────────┬──────────┘
-         ┌────┼────┐
-         ↓    ↓    ↓
-    AdGuard Twingate DDNS
-    DNS+Ads   VPN    Updates
+    INTERNET                           LAN ONLY
+        │                                  │
+        ↓                                  ↓
+    Cloudflare                     ┌─────────────┐
+        │                          │   AdGuard   │
+        ↓                          │  DNS (:53)  │
+    ┌────────────────┐             └─────────────┘
+    │ NPM (:80/443)  │ ← Only exposed ports
+    └────────────────┘
+           │
+    ┌──────┴──────┐
+    ↓             ↓
+ Twingate      DDNS
+ (outbound)  (outbound)
 ```
 
-**Key Design:** NPM routes all web traffic. AdGuard handles DNS for local network. Twingate provides secure remote VPN access.
+**Security:**
+- Only ports 80/443 exposed to internet (via Cloudflare)
+- AdGuard DNS serves local network only (never exposed)
+- Twingate/DDNS connect outbound, no inbound ports needed
+- Admin panels (81, 3001) accessible from LAN only
 
 ---
 

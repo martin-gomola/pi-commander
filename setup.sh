@@ -73,6 +73,7 @@ sudo apt install -y -qq \
     jq \
     git \
     make \
+    nano \
     net-tools
 
 # Install Docker if not present
