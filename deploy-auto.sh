@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # Configuration
-REPO_DIR="/home/$(whoami)/pi-commander"
+REPO_DIR="${HOME}/pi-commander"
 DOCKER_DIR="${REPO_DIR}/docker"
 LOCKFILE="/tmp/pi-commander-deploy.lock"
 

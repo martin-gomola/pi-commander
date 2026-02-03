@@ -133,7 +133,7 @@ stop: ## Stop all running containers
 start: ## Start all containers
 	@echo "Starting all services..."
 	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker compose.yml" ]; then \
+		if [ -f "$$dir/docker-compose.yml" ]; then \
 			cd "$$dir" && docker compose up -d && cd ../..; \
 		fi \
 	done
@@ -148,7 +148,7 @@ backup: ## Create full backup of all data
 		--exclude='*.log' \
 		/srv/docker/nginx-proxy-manager/ \
 		/srv/docker/adguard/ \
-		$(HOME)/pi-commander/docker/*/. env \
+		$(HOME)/pi-commander/docker/*/.env \
 		2>/dev/null || true
 	@echo "$(GREEN)Backup complete$(NC)"
 	@ls -lh $(BACKUP_DIR)/*.tar.gz | tail -1
@@ -287,10 +287,10 @@ test-syntax: ## Validate YAML syntax (no Docker required)
 	@echo "Validating YAML syntax..."
 	@echo ""
 	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker compose.yml" ]; then \
+		if [ -f "$$dir/docker-compose.yml" ]; then \
 			name=$$(basename $$dir); \
 			echo -n "$$name: "; \
-			if python3 -c "import yaml; yaml.safe_load(open('$$dir/docker compose.yml'))" 2>/dev/null; then \
+			if python3 -c "import yaml; yaml.safe_load(open('$$dir/docker-compose.yml'))" 2>/dev/null; then \
 				echo "$(GREEN)✓ Valid YAML$(NC)"; \
 			else \
 				echo "$(RED)✗ Invalid YAML$(NC)"; \
@@ -304,7 +304,7 @@ test-config: ## Validate all docker compose configurations (requires Docker)
 	@echo "Validating docker compose configurations..."
 	@echo ""
 	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker compose.yml" ]; then \
+		if [ -f "$$dir/docker-compose.yml" ]; then \
 			name=$$(basename $$dir); \
 			echo -n "$$name: "; \
 			if cd "$$dir" && docker compose config > /dev/null 2>&1; then \
@@ -322,7 +322,7 @@ test-config: ## Validate all docker compose configurations (requires Docker)
 test-pull: ## Pull all images without starting (verify images exist)
 	@echo "Pulling all Docker images..."
 	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker compose.yml" ]; then \
+		if [ -f "$$dir/docker-compose.yml" ]; then \
 			name=$$(basename $$dir); \
 			echo "Pulling $$name..."; \
 			cd "$$dir" && docker compose pull 2>&1 || true; \
@@ -336,7 +336,7 @@ test-dry-run: ## Start services briefly to verify they launch (then stop)
 	@echo "This will start services briefly and then stop them."
 	@echo ""
 	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker compose.yml" ]; then \
+		if [ -f "$$dir/docker-compose.yml" ]; then \
 			name=$$(basename $$dir); \
 			echo "Testing $$name..."; \
 			cd "$$dir" && \

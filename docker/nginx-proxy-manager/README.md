@@ -45,7 +45,7 @@ dns_cloudflare_api_token=${CLOUDFLARE_API_TOKEN}
 
 ## Volume Mounts
 
-The `docker compose.yml` mounts the static directory:
+The `docker-compose.yml` mounts the static directory:
 ```yaml
 volumes:
   - ../../static:/static:ro
