@@ -64,3 +64,4 @@ static/custom.html
 
 # GeoIP databases (large files, updated monthly)
 docker/plausible/geoip/*.mmdb
+.cursor/

@@ -33,9 +33,12 @@ help: ## Display help
 	@echo "$(YELLOW)Backup & Maintenance:$(NC)"
 	@echo "  $(GREEN)make backup$(NC)              Create full backup"
 	@echo "  $(GREEN)make backup-ssl$(NC)          Backup SSL certificates only"
-	@echo "  $(GREEN)make backup-cron-setup$(NC)   Setup weekly backups (Sunday 2 AM)"
-	@echo "  $(GREEN)make reboot-cron-setup$(NC)   Setup weekly reboot (Sunday 4 AM)"
-	@echo "  $(GREEN)make cron-status$(NC)         Show all scheduled tasks"
+	@echo "  $(GREEN)make restart-redis$(NC)       Restart AFFiNE Redis"
+	@echo "  $(GREEN)make weekly-maintenance$(NC)  Run weekly cleanup + Redis restart"
+	@echo "  $(GREEN)make backup-cron-setup$(NC)       Setup weekly backups (Sunday 2 AM)"
+	@echo "  $(GREEN)make reboot-cron-setup$(NC)       Setup weekly reboot (Sunday 4 AM)"
+	@echo "  $(GREEN)make maintenance-cron-setup$(NC)  Setup weekly maintenance (Sunday 5 AM)"
+	@echo "  $(GREEN)make cron-status$(NC)             Show all scheduled tasks"
 	@echo "  $(GREEN)make restore$(NC)             Restore from backup (use BACKUP_FILE=path)"
 	@echo ""
 	@echo "$(YELLOW)Monitoring:$(NC)"
@@ -201,6 +204,18 @@ reboot-cron-remove: ## Remove weekly reboot cron job
 	@sudo crontab -l 2>/dev/null | grep -v "reboot" | sudo crontab - || true
 	@echo "$(GREEN)Weekly reboot removed$(NC)"
 
+maintenance-cron-setup: ## Setup weekly maintenance (Sunday 5 AM)
+	@echo "Setting up weekly maintenance..."
+	@(crontab -l 2>/dev/null | grep -v "weekly-maintenance"; echo "0 5 * * 0 cd $(CURDIR) && make weekly-maintenance >> /var/log/pi-commander-maintenance.log 2>&1") | crontab -
+	@echo "$(GREEN)Weekly maintenance scheduled for Sunday 5 AM$(NC)"
+	@echo "Current crontab:"
+	@crontab -l | grep weekly-maintenance || true
+
+maintenance-cron-remove: ## Remove weekly maintenance cron job
+	@echo "Removing weekly maintenance cron job..."
+	@crontab -l 2>/dev/null | grep -v "weekly-maintenance" | crontab - || true
+	@echo "$(GREEN)Weekly maintenance removed$(NC)"
+
 cron-status: ## Show all scheduled cron jobs
 	@echo "=== Scheduled Tasks ==="
 	@echo ""
@@ -360,6 +375,17 @@ clean: ## Remove stopped containers and unused images
 	@docker image prune -f
 	@docker volume prune -f
 	@echo "$(GREEN)Cleanup complete$(NC)"
+
+restart-redis: ## Restart AFFiNE Redis (fixes memory/IO issues)
+	@echo "Restarting AFFiNE Redis..."
+	@docker restart affine_redis 2>/dev/null || echo "$(YELLOW)affine_redis not running$(NC)"
+	@echo "$(GREEN)Redis restarted$(NC)"
+
+weekly-maintenance: ## Run weekly maintenance (clean + restart Redis)
+	@echo "=== Weekly Maintenance ==="
+	@$(MAKE) clean
+	@$(MAKE) restart-redis
+	@echo "$(GREEN)Weekly maintenance complete$(NC)"
 
 stats: ## Show Docker resource usage in real-time
 	@docker stats

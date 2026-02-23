@@ -183,6 +183,14 @@ make reboot-cron-setup
 
 Reboots server every Sunday at 4 AM. Keeps things fresh.
 
+### Weekly Maintenance (Recommended)
+
+```bash
+make maintenance-cron-setup
+```
+
+Runs every Sunday at 5 AM. Cleans up Docker resources and restarts Redis to prevent memory issues.
+
 ### Check Scheduled Tasks
 
 ```bash
@@ -194,6 +202,7 @@ make cron-status
 ```bash
 make backup-cron-remove
 make reboot-cron-remove
+make maintenance-cron-remove
 ```
 
 ### Manual Backup
