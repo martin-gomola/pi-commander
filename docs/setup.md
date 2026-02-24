@@ -110,15 +110,15 @@ Best for: Personal use, no domain needed
 
 See [Services Guide](services.md#duckdns-alternative-to-cloudflare) for setup.
 
-### Twingate (Private VPN)
+### Tailscale (Private Tailnet + DNS)
 
-Best for: Personal access only, no domain needed
+Best for: Personal access + AdGuard DNS on mobile, no domain needed
 
-- Requires: Free Twingate account
+- Requires: Free Tailscale account
 - Setup time: 10 minutes
 - Result: Secure private access from anywhere
 
-See [Services Guide](services.md#twingate-vpn) for setup.
+See [Services Guide](services.md#tailscale-remote-access) for setup.
 
 ### Skip Both
 
@@ -227,6 +227,6 @@ make backup-ssl       # SSL certificates only
 
 ## Next Steps
 
-- [Services Guide](services.md) - Configure Cloudflare, Twingate, SSL
+- [Services Guide](services.md) - Configure Cloudflare, Tailscale, SSL
 - [Troubleshooting](troubleshooting.md) - Fix common issues
 - [homelab-services](https://github.com/martin-gomola/homelab-services) - Add more apps

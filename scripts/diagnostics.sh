@@ -90,7 +90,7 @@ if [ -d ~/pi-commander ]; then
     echo "Configuration:"
     [ -f docker/nginx-proxy-manager/.env ] && echo "✓ nginx-proxy-manager/.env exists" || echo "✗ nginx-proxy-manager/.env missing"
     [ -f docker/adguard/.env ] && echo "✓ adguard/.env exists" || echo "✗ adguard/.env missing"
-    [ -f docker/twingate/.env ] && echo "✓ twingate/.env exists" || echo "✗ twingate/.env missing"
+    [ -f docker/tailscale/.env ] && echo "✓ tailscale/.env exists" || echo "✗ tailscale/.env missing"
     [ -f docker/cloudflare-ddns/.env ] && echo "✓ cloudflare-ddns/.env exists" || echo "✗ cloudflare-ddns/.env missing"
     echo ""
 else
@@ -100,7 +100,7 @@ fi
 info "Recent Container Errors"
 echo "======================="
 if command -v docker &> /dev/null; then
-    for container in nginx-proxy-manager adguard-home twingate-connector cloudflare-ddns; do
+    for container in nginx-proxy-manager adguard-home tailscale cloudflare-ddns; do
         if docker ps -a --format "{{.Names}}" | grep -q "^${container}$"; then
             echo ""
             echo "=== $container ==="
