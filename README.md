@@ -181,6 +181,7 @@ make lazydocker     # Docker UI
 
 ## Related
 
+- **[mythosaur-ai](https://github.com/martin-gomola/mythosaur-ai)** - Self-hosted AI platform (Ollama, Mattermost, Codex, Open WebUI)
 - **[homelab-services](https://github.com/martin-gomola/homelab-services)** - Additional self-hosted apps (AFFiNE, Mealie, Plausible, etc.)
 
 ---
