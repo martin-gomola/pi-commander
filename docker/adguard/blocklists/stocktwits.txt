@@ -4,8 +4,8 @@
 ! Homepage: https://github.com/martin-gomola/pi-commander
 ! License: MIT
 ! Expires: 7 days
-! Last modified: 03 Mar 2026 00:00 UTC
-! Version: 2026.0303.0000.03
+! Last modified: 03 Mar 2026 15:30 UTC
+! Version: 2026.0303.1530.04
 ! Syntax: Adblock Plus
 !
 ! Source data: WhoTracks.Me / Ghostery analysis of stocktwits.com (89 observed trackers)
@@ -297,6 +297,22 @@ stocktwits.com##div[id="onetrust-banner-sdk"]
 stocktwits.com#%#//scriptlet('prevent-addEventListener', 'load', 'pagefair')
 stocktwits.com#%#//scriptlet('abort-on-property-read', 'pageFair')
 stocktwits.com#%#//scriptlet('set-constant', 'pageFair', 'undefined')
+
+! ──────────────────────────────────────────────
+! SECTION: Compatibility Bypass (Stocktwits anti-block gate)
+! Required for DNS-level blockers where browser scriptlets are unavailable.
+! ──────────────────────────────────────────────
+
+! Script loader and runtime checks observed failing with ERR_CONNECTION_REFUSED
+@@||html-load.com^$important
+@@||product.instiengage.com^$important
+@@||live.primis.tech^$important
+@@||d3lcz8vpax4lo2.cloudfront.net^$important
+@@||cdn.confiant-integrations.net^$important
+
+! Consent/runtime bootstrap required by current app shell
+@@||cdn.cookielaw.org^$important
+@@||www.googletagmanager.com^$important
 
 ! ──────────────────────────────────────────────
 ! SECTION: Allowlist — preserve core functionality
