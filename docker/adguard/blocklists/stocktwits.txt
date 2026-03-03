@@ -5,7 +5,7 @@
 ! License: MIT
 ! Expires: 7 days
 ! Last modified: 03 Mar 2026 00:00 UTC
-! Version: 2026.0303.0000.01
+! Version: 2026.0303.0000.03
 ! Syntax: Adblock Plus
 !
 ! Source data: WhoTracks.Me / Ghostery analysis of stocktwits.com (89 observed trackers)
@@ -248,6 +248,9 @@
 ||insticator.com^
 ||einsticnage.com^
 
+! HTML5 ad creative CDN observed on Stocktwits right-rail/banner ads
+||html-load.com^
+
 ! ──────────────────────────────────────────────
 ! SECTION: Cosmetic Filters (AdGuard / uBlock browser only)
 ! These hide ad elements on the page; ignored by DNS blockers
@@ -271,6 +274,11 @@ stocktwits.com##script[src*="einsticnage.com"]
 stocktwits.com##div[class*="Insticator_container"]
 stocktwits.com##div[class*="Insticator_minH"]
 stocktwits.com##p[class*="Disclosure_disclosure"]
+stocktwits.com##gwd-pagedeck
+stocktwits.com##gwd-exit[metric*="exit ad"]
+stocktwits.com##biq-adchoices-v4
+stocktwits.com##div:has(> gwd-pagedeck)
+stocktwits.com##div:has(> biq-adchoices-v4)
 stocktwits.com##div[class*="premium-banner"]
 stocktwits.com##div[class*="promo-banner"]
 stocktwits.com##div[class*="newsletter-signup"]
@@ -294,8 +302,7 @@ stocktwits.com#%#//scriptlet('set-constant', 'pageFair', 'undefined')
 ! SECTION: Allowlist — preserve core functionality
 ! ──────────────────────────────────────────────
 
-! Core stocktwits domains (never block)
-@@||stocktwits.com^$important
+! Core stocktwits domains that may be overblocked by aggressive third-party lists
 @@||api.stocktwits.com^$important
 @@||charts.stocktwits.com^$important
 @@||blog.stocktwits.com^$important
