@@ -19,16 +19,20 @@
 ! ──────────────────────────────────────────────
 
 ! Google Ads / DoubleClick / DV360
+||googlesyndication.com^
 ||pagead2.googlesyndication.com^
 ||tpc.googlesyndication.com^
+||doubleclick.net^
 ||ad.doubleclick.net^
 ||securepubads.g.doubleclick.net^
 ||cm.g.doubleclick.net^
 ||stats.g.doubleclick.net^
 ||googleads.g.doubleclick.net^
 ||bid.g.doubleclick.net^
+||googleadservices.com^
 ||adservice.google.com^
 ||www.googleadservices.com^
+||googletagservices.com^
 
 ! Amazon Advertising
 ||aax.amazon-adsystem.com^
@@ -240,6 +244,10 @@
 ! Moneybadger — internal ad/monetization platform
 ||moneybadger.stocktwits.com^
 
+! Insticator ad stack (observed in-feed sponsored cards)
+||insticator.com^
+||einsticnage.com^
+
 ! ──────────────────────────────────────────────
 ! SECTION: Cosmetic Filters (AdGuard / uBlock browser only)
 ! These hide ad elements on the page; ignored by DNS blockers
@@ -257,6 +265,12 @@ stocktwits.com##div[id*="google_ads"]
 stocktwits.com##div[id*="gpt-ad"]
 stocktwits.com##iframe[src*="doubleclick"]
 stocktwits.com##iframe[src*="googlesyndication"]
+stocktwits.com##script[id^="js-insticator-"]
+stocktwits.com##script[src*="insticator"]
+stocktwits.com##script[src*="einsticnage.com"]
+stocktwits.com##div[class*="Insticator_container"]
+stocktwits.com##div[class*="Insticator_minH"]
+stocktwits.com##p[class*="Disclosure_disclosure"]
 stocktwits.com##div[class*="premium-banner"]
 stocktwits.com##div[class*="promo-banner"]
 stocktwits.com##div[class*="newsletter-signup"]
