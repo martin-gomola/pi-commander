@@ -1,0 +1,308 @@
+[Adblock Plus]
+! Title: Stocktwits.com Ad & Tracker Blocklist
+! Description: Custom blocklist for stocktwits.com — blocks advertising networks, analytics trackers, consent nag walls, and telemetry while preserving core site functionality.
+! Homepage: https://github.com/martin-gomola/pi-commander
+! License: MIT
+! Expires: 7 days
+! Last modified: 03 Mar 2026 00:00 UTC
+! Version: 2026.0303.0000.01
+! Syntax: Adblock Plus
+!
+! Source data: WhoTracks.Me / Ghostery analysis of stocktwits.com (89 observed trackers)
+! Usage:
+!   AdGuard Home — add raw URL as a custom DNS blocklist
+!   AdGuard Browser Extension — add as a custom filter list
+!   uBlock Origin — add as a custom filter list
+!
+! ──────────────────────────────────────────────
+! SECTION: Advertising — Programmatic / SSP / DSP
+! ──────────────────────────────────────────────
+
+! Google Ads / DoubleClick / DV360
+||pagead2.googlesyndication.com^
+||tpc.googlesyndication.com^
+||ad.doubleclick.net^
+||securepubads.g.doubleclick.net^
+||cm.g.doubleclick.net^
+||stats.g.doubleclick.net^
+||googleads.g.doubleclick.net^
+||bid.g.doubleclick.net^
+||adservice.google.com^
+||www.googleadservices.com^
+
+! Amazon Advertising
+||aax.amazon-adsystem.com^
+||z-na.amazon-adsystem.com^
+||s.amazon-adsystem.com^
+||c.amazon-adsystem.com^
+||fls-na.amazon-adsystem.com^
+||aan.amazon.com^
+||unagi.amazon.com^
+
+! 33Across
+||33across.com^
+||cdn-gl.33across.com^
+||ssc-cms.33across.com^
+||hb.33across.com^
+||tynt.com^
+
+! The Trade Desk
+||match.adsrvr.org^
+||js.adsrvr.org^
+||t.adsrvr.org^
+||data.adsrvr.org^
+||insight.adsrvr.org^
+||thetradedesk.com^
+
+! PubMatic
+||ads.pubmatic.com^
+||image2.pubmatic.com^
+||image4.pubmatic.com^
+||image6.pubmatic.com^
+||image8.pubmatic.com^
+||hbopenbid.pubmatic.com^
+||t.pubmatic.com^
+
+! Magnite / Rubicon Project
+||secure-assets.rubiconproject.com^
+||fastlane.rubiconproject.com^
+||prebid-server.rubiconproject.com^
+||optimized-by.rubiconproject.com^
+||pixel.rubiconproject.com^
+||eus.rubiconproject.com^
+||token.rubiconproject.com^
+
+! AppNexus / Xandr
+||ib.adnxs.com^
+||acdn.adnxs.com^
+||prebid.adnxs.com^
+||secure.adnxs.com^
+||sin3-ib.adnxs.com^
+||nym1-ib.adnxs.com^
+
+! TripleLift
+||tlx.3lift.com^
+||eb2.3lift.com^
+||ib.3lift.com^
+||img.3lift.com^
+
+! OpenX
+||u.openx.net^
+||rtb.openx.net^
+||ox-d.openx.net^
+||us-u.openx.net^
+||delfi-openx.net^
+
+! ShareThrough
+||btlr.sharethrough.com^
+||native.sharethrough.com^
+||s.sharethrough.com^
+
+! Criteo
+||bidder.criteo.com^
+||dis.criteo.com^
+||gum.criteo.com^
+||static.criteo.net^
+||sslwidget.criteo.com^
+
+! ID5
+||id5-sync.com^
+||cdn.id5-sync.com^
+
+! Index Exchange
+||casalemedia.com^
+||htlb.casalemedia.com^
+||dsum-sec.casalemedia.com^
+||ssum-sec.casalemedia.com^
+
+! Sovrn / LiveJournal Ads
+||ap.lijit.com^
+||beacon.lijit.com^
+
+! Yahoo / Verizon Media / Oath
+||ads.yahoo.com^
+||consent.cmp.oath.com^
+
+! GumGum
+||g2.gumgum.com^
+||js.gumgum.com^
+
+! Kargo
+||storage.cloud.kargo.com^
+
+! MediaMath
+||pixel.mathtag.com^
+||sync.mathtag.com^
+
+! ──────────────────────────────────────────────
+! SECTION: Analytics & Tracking
+! ──────────────────────────────────────────────
+
+! mParticle (97% presence on stocktwits)
+||jssdkcdns.mparticle.com^
+||jssdks.mparticle.com^
+||identity.mparticle.com^
+||pixels.mparticle.com^
+||nativesdks.mparticle.com^
+
+! Google Analytics
+||www.google-analytics.com^
+||analytics.google.com^
+||ssl.google-analytics.com^
+
+! Google Tag Manager
+||www.googletagmanager.com^
+||tagmanager.google.com^
+
+! Sift Science (fraud detection / fingerprinting)
+||s.siftscience.com^
+||cdn.siftscience.com^
+||api3.siftscience.com^
+
+! Mixpanel
+||cdn.mxpnl.com^
+||api-js.mixpanel.com^
+||decide.mixpanel.com^
+||api.mixpanel.com^
+
+! Datadog RUM / Browser Monitoring
+||browser-intake-datadoghq.com^
+||rum.browser-intake-datadoghq.com^
+||logs.browser-intake-datadoghq.com^
+||rum-http-intake.logs.datadoghq.com^
+
+! PageFair (ad-recovery / anti-adblock)
+||pagefair.com^
+||pagefair.net^
+||bab.pagefaircdn.com^
+||d.pagefair.net^
+||c2.pagefair.com^
+
+! Segment
+||cdn.segment.com^
+||api.segment.io^
+
+! ──────────────────────────────────────────────
+! SECTION: Consent Nag Walls / CMP
+! ──────────────────────────────────────────────
+
+! OneTrust
+||cdn.cookielaw.org^
+||optanon.blob.core.windows.net^
+||geolocation.onetrust.com^
+||privacyportal.onetrust.com^
+||cookies-data.onetrust.io^
+
+! LiveRamp CMP / Identity Resolution
+||rlcdn.com^
+||id.rlcdn.com^
+||api.rlcdn.com^
+||launchpad.liveramp.com^
+||connect.liveramp.com^
+||idx.liadm.com^
+||i.liadm.com^
+
+! ──────────────────────────────────────────────
+! SECTION: Fingerprinting & Device ID
+! ──────────────────────────────────────────────
+
+! FingerprintJS / BotD
+||fpjs.io^
+||api.fpjs.io^
+||cdn.fpjs.io^
+
+! ──────────────────────────────────────────────
+! SECTION: Social Tracking Pixels
+! ──────────────────────────────────────────────
+
+! Facebook / Meta Pixel
+||connect.facebook.net^
+||www.facebook.com^$third-party
+||pixel.facebook.com^
+
+! Twitter / X Conversion
+||analytics.twitter.com^
+||t.co^$third-party
+||static.ads-twitter.com^
+
+! Reddit Pixel
+||events.reddit.com^
+||redditmedia.com^$third-party
+
+! TikTok Pixel
+||analytics.tiktok.com^
+||events.tiktok.com^
+
+! ──────────────────────────────────────────────
+! SECTION: Stocktwits-specific Ad/Tracking Subdomains
+! ──────────────────────────────────────────────
+
+! Moneybadger — internal ad/monetization platform
+||moneybadger.stocktwits.com^
+
+! ──────────────────────────────────────────────
+! SECTION: Cosmetic Filters (AdGuard / uBlock browser only)
+! These hide ad elements on the page; ignored by DNS blockers
+! ──────────────────────────────────────────────
+
+stocktwits.com##div[class*="AdSlot"]
+stocktwits.com##div[class*="ad-slot"]
+stocktwits.com##div[class*="ad-container"]
+stocktwits.com##div[class*="ad-wrapper"]
+stocktwits.com##div[class*="sponsored"]
+stocktwits.com##div[class*="Sponsored"]
+stocktwits.com##div[data-testid*="ad"]
+stocktwits.com##div[data-ad]
+stocktwits.com##div[id*="google_ads"]
+stocktwits.com##div[id*="gpt-ad"]
+stocktwits.com##iframe[src*="doubleclick"]
+stocktwits.com##iframe[src*="googlesyndication"]
+stocktwits.com##div[class*="premium-banner"]
+stocktwits.com##div[class*="promo-banner"]
+stocktwits.com##div[class*="newsletter-signup"]
+stocktwits.com##div[class*="advertise"]
+
+! Hide cookie consent overlay (after DNS blocks prevent loading)
+stocktwits.com##div[id="onetrust-consent-sdk"]
+stocktwits.com##div[class*="onetrust"]
+stocktwits.com##div[id="onetrust-banner-sdk"]
+
+! ──────────────────────────────────────────────
+! SECTION: Scriptlet Injections (AdGuard browser only)
+! ──────────────────────────────────────────────
+
+! Prevent anti-adblock detection
+stocktwits.com#%#//scriptlet('prevent-addEventListener', 'load', 'pagefair')
+stocktwits.com#%#//scriptlet('abort-on-property-read', 'pageFair')
+stocktwits.com#%#//scriptlet('set-constant', 'pageFair', 'undefined')
+
+! ──────────────────────────────────────────────
+! SECTION: Allowlist — preserve core functionality
+! ──────────────────────────────────────────────
+
+! Core stocktwits domains (never block)
+@@||stocktwits.com^$important
+@@||api.stocktwits.com^$important
+@@||charts.stocktwits.com^$important
+@@||blog.stocktwits.com^$important
+@@||help.stocktwits.com^$important
+@@||shop.stocktwits.com^$important
+
+! Data providers needed for market quotes
+@@||xignite.com^$important
+@@||bats.com^$important
+@@||batstrading.com^$important
+@@||blueoceantech.io^$important
+
+! Earnings call data
+@@||quartr.com^$important
+
+! Content delivery (needed for site assets)
+@@||cdn.jsdelivr.net^$important
+@@||cdnjs.cloudflare.com^$important
+@@||fonts.googleapis.com^$important
+@@||fonts.gstatic.com^$important
+
+! Giphy embeds (functional content, not ads)
+@@||media.giphy.com^$important
+@@||i.giphy.com^$important
