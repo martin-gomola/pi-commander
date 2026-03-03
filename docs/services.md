@@ -11,7 +11,7 @@ Configure the services included with Pi-Commander.
 | NPM | 443 | HTTPS traffic |
 | AdGuard | 53 | DNS queries |
 | AdGuard | 3001 | Admin panel |
-| Twingate | - | Host network |
+| Tailscale | - | Host network |
 | DDNS | - | No ports |
 
 Check ports in use:
@@ -143,14 +143,15 @@ For each:
 - Your main domain and other subdomains remain unaffected
 - No ports need to be open for certificate generation
 
-### Access From Outside (Twingate)
+### Access From Outside (Tailscale)
 
-When you're away from home, connect via Twingate VPN. Once connected:
+When you're away from home, connect via Tailscale. Once connected:
 
 - Your device can route to your local IP (192.168.x.x)
 - The same `*.home.yourdomain.com` URLs work everywhere
 - No need to remember IPs or different URLs for home vs. away
 - Full HTTPS with valid certificates
+- DNS can be routed to AdGuard through Tailscale without enabling an exit node
 
 This gives you one consistent experience: same URLs, same bookmarks, whether you're on your couch or in a coffee shop.
 
@@ -244,39 +245,41 @@ docker logs cloudflare-ddns
 
 ---
 
-## Twingate VPN
+## Tailscale Remote Access
 
-Twingate provides zero-trust remote access without exposing ports.
+Tailscale provides private remote access plus DNS routing to your homelab without exposing inbound ports.
 
 ### Prerequisites
 
-- Free [Twingate](https://twingate.com) account
-- Connector tokens from Twingate dashboard
+- Free [Tailscale](https://tailscale.com) account
+- Auth key from Tailscale admin
+- Your LAN subnet (example: `192.168.1.0/24`)
 
 ### Setup
 
-1. Create network at [Twingate Admin](https://admin.twingate.com)
-2. Add a connector
-3. Copy the access and refresh tokens
-4. Edit `docker/twingate/.env`:
+1. Open [Tailscale Admin](https://login.tailscale.com/admin/machines)
+2. Create an auth key in **Settings** → **Keys**
+3. Edit `docker/tailscale/.env`:
    ```bash
-   TWINGATE_NETWORK=your-network
-   TWINGATE_ACCESS_TOKEN=your-access-token
-   TWINGATE_REFRESH_TOKEN=your-refresh-token
+   TAILSCALE_AUTHKEY=tskey-auth-xxxxxxxx
+   TAILSCALE_HOSTNAME=pi-commander
+   TAILSCALE_EXTRA_ARGS=--accept-dns=true --advertise-routes=192.168.1.0/24
    ```
-5. Deploy:
+4. Deploy:
    ```bash
    cd ~/pi-commander
    make deploy-all
    ```
+5. In Tailscale Admin, open your `pi-commander` node and approve the advertised subnet route.
 
-### Add Resources
+### DNS Through AdGuard (Mobile-Friendly)
 
-In Twingate admin:
-1. Create resources for each service (e.g., `192.168.1.x:81`)
-2. Assign to groups
-3. Install Twingate client on your devices
-4. Connect to access your services from anywhere
+1. In Tailscale Admin, go to **DNS**.
+2. Add your AdGuard private IP as a nameserver (for example `192.168.1.190`).
+3. Keep exit node disabled to route DNS only.
+4. Install Tailscale client on your devices and connect.
+
+Remote devices can now use AdGuard DNS through the tailnet while internet traffic remains local by default.
 
 ---
 

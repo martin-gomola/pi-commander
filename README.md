@@ -1,16 +1,25 @@
 # Pi-Commander
 
-Core infrastructure for self-hosted servers - Reverse proxy, DNS, VPN, and DDNS management.
+Core infrastructure for self-hosted servers - Reverse proxy, DNS, private remote access, and DDNS management.
 
 ## Why I built this
 
 I had an old Raspberry Pi 3B collecting dust. I wanted to turn it into something useful, a minimal home server that just works. Later I upgraded to a Zotac mini PC for a bit more headroom.
 
-I tried Portainer, Pi-hole, Technitium, plain Nginx and WireGuard before settling on lazydocker, AdGuard, NPM and Twingate. The lesson: if you pick only what you need, self-hosting doesn't have to be complicated. Pi-Commander runs stable on my setup (40+ days uptime so far) because it does less, not more.
+I tried Portainer, Pi-hole, Technitium, plain Nginx and WireGuard before settling on lazydocker, AdGuard, NPM and Tailscale. The lesson: if you pick only what you need, self-hosting doesn't have to be complicated. Pi-Commander runs stable on my setup (40+ days uptime so far) because it does less, not more.
 
 I switched to lazydocker for quick container monitoring and log checks. Combined with Cursor's SSH skill, I can manage the server runtime directly from my editor.
 
 If you want a simple foundation for your home server, this might save you some time.
+
+### Why Tailscale (and not Twingate)
+
+As of February 24, 2026, Tailscale better matches this project's goal: phone access to homelab services while routing DNS queries to private AdGuard Home without tunneling all phone traffic through home.
+
+- Tailscale Personal free tier supports enough personal homelab scale (users/devices) and configurable DNS.
+- Tailscale can route DNS to a private resolver through a subnet router.
+- Internet traffic stays local unless you explicitly enable an exit node.
+- Twingate's current Secure DNS support constraints conflict with the mobile DNS requirement for this project.
 
 ---
 
@@ -52,7 +61,7 @@ cd ~/pi-commander
 # Configure each service
 cd docker/nginx-proxy-manager && cp .env.example .env && nano .env
 cd ../adguard && cp .env.example .env && nano .env
-cd ../twingate && cp .env.example .env && nano .env
+cd ../tailscale && cp .env.example .env && nano .env
 cd ../cloudflare-ddns && cp .env.example .env && nano .env  # or duckdns
 
 # Deploy all services
@@ -74,7 +83,7 @@ make deploy-all
 |---------|---------|------|
 | **Nginx Proxy Manager** | Reverse proxy + SSL | 80, 81, 443 |
 | **AdGuard Home** | DNS + Ad-blocking | 53, 3001 |
-| **Twingate** | Zero-trust VPN | host mode |
+| **Tailscale** | Tailnet remote access + private DNS routing | host mode |
 | **Cloudflare DDNS** | Auto DNS updates | - |
 
 **Additional Tools (installed automatically):**
@@ -98,14 +107,14 @@ make deploy-all
            │
     ┌──────┴──────┐
     ↓             ↓
- Twingate      DDNS
+ Tailscale     DDNS
  (outbound)  (outbound)
 ```
 
 **Security:**
 - Only ports 80/443 exposed to internet (via Cloudflare)
 - AdGuard DNS serves local network only (never exposed)
-- Twingate/DDNS connect outbound, no inbound ports needed
+- Tailscale/DDNS connect outbound, no inbound ports needed
 - Admin panels (81, 3001) accessible from LAN only
 
 ---
@@ -119,7 +128,7 @@ cd pi-commander
 # Copy .env.example to .env in each service directory
 cd docker/nginx-proxy-manager && cp .env.example .env && cd ../..
 cd docker/adguard && cp .env.example .env && cd ../..
-cd docker/twingate && cp .env.example .env && cd ../..
+cd docker/tailscale && cp .env.example .env && cd ../..
 cd docker/cloudflare-ddns && cp .env.example .env && cd ../..
 
 # Configure each .env file, then deploy
@@ -146,7 +155,7 @@ make lazydocker     # Docker UI
 ## Documentation
 
 - [Setup Guide](docs/setup.md) - Post-install configuration
-- [Services Guide](docs/services.md) - Configure NPM, Cloudflare, Twingate
+- [Services Guide](docs/services.md) - Configure NPM, Cloudflare, Tailscale
 - [Troubleshooting](docs/troubleshooting.md) - Common issues and fixes
 
 ---
@@ -172,6 +181,7 @@ make lazydocker     # Docker UI
 
 ## Related
 
+- **[mythosaur-ai](https://github.com/martin-gomola/mythosaur-ai)** - Self-hosted AI platform (Ollama, Mattermost, Codex, Open WebUI)
 - **[homelab-services](https://github.com/martin-gomola/homelab-services)** - Additional self-hosted apps (AFFiNE, Mealie, Plausible, etc.)
 
 ---

@@ -1,0 +1,27 @@
+services:
+  tailscale:
+    image: tailscale/tailscale:stable
+    container_name: tailscale
+    hostname: ${TAILSCALE_HOSTNAME}
+    network_mode: host
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - /srv/docker/tailscale/state:/var/lib/tailscale
+      - /lib/modules:/lib/modules:ro
+    environment:
+      TS_AUTHKEY: ${TAILSCALE_AUTHKEY}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_EXTRA_ARGS: ${TAILSCALE_EXTRA_ARGS}
+      TS_USERSPACE: "false"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    stop_grace_period: 10s
+    # Note: Uses host networking for direct LAN access and subnet routing

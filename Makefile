@@ -1,4 +1,4 @@
-.PHONY: help deploy deploy-all status update update-service backup backup-ssl restore logs restart stop start health info commit
+.PHONY: help deploy deploy-all status update update-service backup backup-ssl restore logs restart stop start health info commit logs-tailscale logs-twingate
 
 # Configuration
 DEPLOY_SCRIPT := ./deploy-auto.sh
@@ -19,7 +19,7 @@ help: ## Display help
 	@echo "$(GREEN)Pi-Commander - Core Infrastructure Management$(NC)"
 	@echo ""
 	@echo "$(YELLOW)Main Commands:$(NC)"
-	@echo "  $(GREEN)make deploy-all$(NC)            Deploy core infrastructure (NPM, DNS, VPN, DDNS)"
+	@echo "  $(GREEN)make deploy-all$(NC)            Deploy core infrastructure (NPM, DNS, Tailscale, DDNS)"
 	@echo "  $(GREEN)make update$(NC)                Pull git & auto-deploy changed services"
 	@echo "  $(GREEN)make update-service SERVICE=<name>$(NC)  Update specific service"
 	@echo "  $(GREEN)make status$(NC)                Show git & container status"
@@ -98,8 +98,8 @@ deploy-all: ## Deploy core infrastructure services
 	@cd docker/nginx-proxy-manager && docker compose up -d
 	@echo "[2/5] Deploying AdGuard Home..."
 	@cd docker/adguard && docker compose up -d
-	@echo "[3/5] Deploying Twingate Connector..."
-	@cd docker/twingate && docker compose up -d
+	@echo "[3/5] Deploying Tailscale..."
+	@cd docker/tailscale && docker compose up -d
 	@echo "[4/5] Deploying Dynamic DNS..."
 	@if [ -f docker/cloudflare-ddns/.env ] && [ -s docker/cloudflare-ddns/.env ]; then \
 		echo "  Using Cloudflare DDNS..."; \
@@ -239,8 +239,10 @@ logs-npm: ## Show Nginx Proxy Manager logs
 logs-dns: ## Show AdGuard Home logs
 	@docker logs -f adguard-home
 
-logs-twingate: ## Show Twingate Connector logs
-	@docker logs -f twingate-connector
+logs-tailscale: ## Show Tailscale logs
+	@docker logs -f tailscale
+
+logs-twingate: logs-tailscale ## Deprecated alias for Tailscale logs
 
 
 health: ## Run comprehensive health checks
