@@ -74,14 +74,18 @@ update: deploy ## Alias for deploy (git pull + update services)
 
 upgrade: ## Pull latest Docker images and recreate all containers
 	@echo "Upgrading all services to latest images..."
+	@echo "Skipping services without .env file (not configured)"
 	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker-compose.yml" ]; then \
+		if [ -f "$$dir/docker-compose.yml" ] && [ -f "$$dir/.env" ]; then \
 			name=$$(basename $$dir); \
+			echo ""; \
 			echo "Upgrading $$name..."; \
-			cd "$$dir" && docker compose pull && docker compose up -d && cd - > /dev/null; \
+			cd "$$dir" && docker compose pull && docker compose up -d --force-recreate; \
+			cd - > /dev/null; \
 		fi \
 	done
-	@echo "$(GREEN)All services upgraded$(NC)"
+	@echo ""
+	@echo "$(GREEN)All configured services upgraded$(NC)"
 
 upgrade-service: ## Upgrade specific service to latest image (use: make upgrade-service SERVICE=nginx-proxy-manager)
 	@if [ -z "$(SERVICE)" ]; then \
