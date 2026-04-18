@@ -1,4 +1,4 @@
-.PHONY: help deploy deploy-all status update update-service backup backup-ssl restore logs restart stop start health info commit
+.PHONY: help deploy deploy-all status update upgrade upgrade-service update-service backup backup-ssl restore logs restart stop start health info commit
 
 # Configuration
 DEPLOY_SCRIPT := ./deploy-auto.sh
@@ -21,7 +21,8 @@ help: ## Display help
 	@echo "$(YELLOW)Main Commands:$(NC)"
 	@echo "  $(GREEN)make deploy-all$(NC)            Deploy core infrastructure (NPM, DNS, VPN, DDNS)"
 	@echo "  $(GREEN)make update$(NC)                Pull git & auto-deploy changed services"
-	@echo "  $(GREEN)make update-service SERVICE=<name>$(NC)  Update specific service"
+	@echo "  $(GREEN)make upgrade$(NC)               Pull latest Docker images for all services"
+	@echo "  $(GREEN)make upgrade-service SERVICE=<name>$(NC)  Upgrade specific service to latest image"
 	@echo "  $(GREEN)make status$(NC)                Show git & container status"
 	@echo ""
 	@echo "$(YELLOW)Service Control:$(NC)"
@@ -70,6 +71,29 @@ deploy: ## Smart deploy (only changed services)
 	@$(DEPLOY_SCRIPT) deploy
 
 update: deploy ## Alias for deploy (git pull + update services)
+
+upgrade: ## Pull latest Docker images and recreate all containers
+	@echo "Upgrading all services to latest images..."
+	@for dir in docker/*/; do \
+		if [ -f "$$dir/docker-compose.yml" ]; then \
+			name=$$(basename $$dir); \
+			echo "Upgrading $$name..."; \
+			cd "$$dir" && docker compose pull && docker compose up -d && cd - > /dev/null; \
+		fi \
+	done
+	@echo "$(GREEN)All services upgraded$(NC)"
+
+upgrade-service: ## Upgrade specific service to latest image (use: make upgrade-service SERVICE=nginx-proxy-manager)
+	@if [ -z "$(SERVICE)" ]; then \
+		echo "$(RED)Error: Please specify SERVICE$(NC)"; \
+		echo "Usage: make upgrade-service SERVICE=nginx-proxy-manager"; \
+		exit 1; \
+	fi
+	@echo "Upgrading $(SERVICE) to latest image..."
+	@cd docker/$(SERVICE) && \
+		docker compose pull && \
+		docker compose up -d --force-recreate && \
+		echo "$(GREEN)✓ $(SERVICE) upgraded$(NC)"
 
 update-service: ## Update specific service (use: make update-service SERVICE=affine)
 	@if [ -z "$(SERVICE)" ]; then \
