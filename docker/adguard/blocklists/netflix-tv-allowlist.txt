@@ -1,0 +1,29 @@
+[Adblock Plus]
+! Title: Netflix Smart TV Playback Allowlist
+! Description: Keeps Netflix playback, catalog, sign-in, artwork, and Open Connect delivery reachable for AdGuard Home clients tagged as TVs. Household-check and telemetry hosts are intentionally not allowlisted.
+! Homepage: https://github.com/martin-gomola/pi-commander
+! License: MIT
+! Expires: 7 days
+! Last modified: 15 Aug 2026 09:51 UTC
+! Version: 2026.0815.0951.01
+! Syntax: AdGuard Home adblock-style DNS exception rules
+!
+! Scope every exception to persistent clients tagged device_tv. The important
+! modifier ensures these playback exceptions win over broad third-party lists.
+@@||api-global.netflix.com^$ctag=device_tv,important
+@@||nrdp.prod.cloud.netflix.com^$ctag=device_tv,important
+@@||nrdp.ws.prod.cloud.netflix.com^$ctag=device_tv,important
+@@||prod.ftl.netflix.com^$ctag=device_tv,important
+@@||nrdp.nccp.netflix.com^$ctag=device_tv,important
+@@||nrdp51-appboot.netflix.com^$ctag=device_tv,important
+@@||uiboot.netflix.com^$ctag=device_tv,important
+@@||secure.netflix.com^$ctag=device_tv,important
+@@||nflxvideo.net^$ctag=device_tv,important
+@@||nflxso.net^$ctag=device_tv,important
+@@||nflximg.com^$ctag=device_tv,important
+@@||nflxext.com^$ctag=device_tv,important
+!
+! Intentionally not allowlisted:
+! - logs.netflix.com, nrdp.logs.netflix.com, customerevents.netflix.com
+! - ichnaea.netflix.com
+! - prod.cloud.netflix.com and platform household-check hostnames

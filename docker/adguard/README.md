@@ -44,6 +44,17 @@ make update-service SERVICE=adguard
 - AdGuard DNS filter
 - Additional lists can be added in Settings → Filters
 
+### Netflix Smart TV Playback Allowlist
+
+[`blocklists/netflix-tv-allowlist.txt`](blocklists/netflix-tv-allowlist.txt)
+contains TV-scoped exception rules for the Netflix catalog, sign-in, artwork,
+and playback delivery paths. It does not allowlist household-check or telemetry
+hosts.
+
+The rules require the TV to be configured as a persistent AdGuard Home client
+with the `device_tv` tag. They use `$important` so playback exceptions override
+broad third-party filter lists without weakening filtering for other clients.
+
 ### Set as Network DNS
 
 **Option 1: Router Configuration** (Recommended)

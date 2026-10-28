@@ -5,26 +5,17 @@
 set -euo pipefail
 
 # Configuration
-REPO_DIR="${HOME}/pi-commander"
-DOCKER_DIR="${REPO_DIR}/docker"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/pi-commander.sh
+source "$SCRIPT_DIR/scripts/lib/pi-commander.sh"
+
+REPO_DIR="${PC_REPO_DIR:-$HOME/pi-commander}"
 LOCKFILE="/tmp/pi-commander-deploy.lock"
-
-# Colors
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m'
-
-log() { echo -e "${GREEN}[$(date +'%H:%M:%S')] ✅ $1${NC}"; }
-info() { echo -e "${BLUE}[$(date +'%H:%M:%S')] ℹ️  $1${NC}"; }
-warn() { echo -e "${YELLOW}[$(date +'%H:%M:%S')] ⚠️  $1${NC}"; }
-error() { echo -e "${RED}[$(date +'%H:%M:%S')] ❌ $1${NC}"; exit 1; }
 
 # Prevent concurrent runs
 acquire_lock() {
     if [ -f "$LOCKFILE" ]; then
-        error "Another deployment is running. If stuck, remove: $LOCKFILE"
+        pc_error "Another deployment is running. If stuck, remove: $LOCKFILE"
     fi
     touch "$LOCKFILE"
     trap "rm -f $LOCKFILE" EXIT
@@ -35,90 +26,56 @@ get_changed_services() {
     local current_commit=$(git rev-parse HEAD)
     
     # Pull latest
-    info "Pulling latest changes from git..." >&2
+    pc_info "Pulling latest changes from git..." >&2
     git fetch origin >&2
     
     local new_commit=$(git rev-parse origin/main)
     
     if [ "$current_commit" = "$new_commit" ]; then
-        log "Already up to date" >&2
+        pc_log "Already up to date" >&2
         return 0
     fi
     
     # Get changed files
     local changed_files=$(git diff --name-only "$current_commit" "$new_commit")
     
-    info "Changes detected:" >&2
-    echo "$changed_files" | sed 's/^/  📝 /' >&2
+    pc_info "Changes detected:" >&2
+    echo "$changed_files" | sed 's/^/  - /' >&2
     
     # Pull changes
     git pull origin main >&2
     
-    # Extract affected services (only output this to stdout)
-    echo "$changed_files" | grep "^docker/" | cut -d'/' -f2 | sort -u
-}
-
-# Deploy a service
-deploy_service() {
-    local service="$1"
-    local service_dir="${DOCKER_DIR}/${service}"
-    
-    if [ ! -d "$service_dir" ]; then
-        warn "Service directory not found: $service_dir"
-        return 1
-    fi
-    
-    if [ ! -f "${service_dir}/docker-compose.yml" ]; then
-        warn "No docker-compose.yml in $service_dir"
-        return 1
-    fi
-    
-    info "Deploying: $service"
-    
-    cd "$service_dir"
-    
-    # Pull latest images
-    docker compose pull 2>&1 | grep -v "Warning" || true
-    
-    # Deploy with environment file if exists
-    if [ -f "stack.env" ]; then
-        docker compose --env-file stack.env up -d --remove-orphans
-    elif [ -f ".env" ]; then
-        docker compose --env-file .env up -d --remove-orphans
-    else
-        docker compose up -d --remove-orphans
-    fi
-    
-    log "✓ $service deployed"
+    echo "$changed_files" | awk -F/ '/^docker\/[^/]+\// {print $2}' | sort -u | while IFS= read -r service; do
+        pc_service_exists "$service" && printf '%s\n' "$service"
+    done
 }
 
 # Main deployment
 main_deploy() {
     acquire_lock
     
-    cd "$REPO_DIR" || error "Repository not found: $REPO_DIR"
+    cd "$REPO_DIR" || pc_error "Repository not found: $REPO_DIR"
     
-    log "Starting Pi-Commander auto-deployment"
+    pc_log "Starting Pi-Commander auto-deployment"
     
     # Get changed services
     local services=$(get_changed_services)
     
     if [ -z "$services" ] || [ "$services" = "" ]; then
-        log "No service changes detected"
+        pc_log "No service changes detected"
         exit 0
     fi
     
     echo ""
-    info "Services to deploy:"
-    # Filter out empty lines and log messages
+    pc_info "Services to deploy:"
     local clean_services=$(echo "$services" | grep -v "^$" | grep -v "^\[" || true)
     
     if [ -z "$clean_services" ]; then
-        log "No service changes detected"
+        pc_log "No service changes detected"
         exit 0
     fi
     
-    echo "$clean_services" | sed 's/^/  🚀 /'
+    echo "$clean_services" | sed 's/^/  - /'
     echo ""
     
     # Deploy each service
@@ -127,22 +84,22 @@ main_deploy() {
     
     while IFS= read -r service; do
         if [ -n "$service" ]; then
-            if deploy_service "$service"; then
-                ((deployed++))
+            if pc_deploy_service "$service"; then
+                deployed=$((deployed + 1))
             else
-                ((failed++))
+                failed=$((failed + 1))
             fi
         fi
     done <<< "$clean_services"
     
     echo ""
-    log "Deployment complete!"
-    log "✓ Deployed: $deployed services"
-    [ $failed -gt 0 ] && warn "⚠ Failed: $failed services"
+    pc_log "Deployment complete"
+    pc_log "Deployed: $deployed services"
+    [ $failed -gt 0 ] && pc_warn "Failed: $failed services"
     
     # Show status
     echo ""
-    info "Container status:"
+    pc_info "Container status:"
     docker ps --format "table {{.Names}}\t{{.Status}}" | head -20
 }
 
@@ -150,40 +107,24 @@ main_deploy() {
 deploy_all() {
     acquire_lock
     
-    cd "$REPO_DIR" || error "Repository not found: $REPO_DIR"
+    cd "$REPO_DIR" || pc_error "Repository not found: $REPO_DIR"
     
-    log "Deploying ALL services"
+    pc_log "Deploying all core infrastructure services"
     
     # Pull latest
     git pull origin main
-    
-    local deployed=0
-    local failed=0
-    
-    for service_dir in "$DOCKER_DIR"/*/; do
-        local service=$(basename "$service_dir")
-        
-        if deploy_service "$service"; then
-            ((deployed++))
-        else
-            ((failed++))
-        fi
-    done
-    
-    log "Deployment complete!"
-    log "✓ Deployed: $deployed services"
-    [ $failed -gt 0 ] && warn "⚠ Failed: $failed services"
+    pc_deploy_all
 }
 
 # Quick status
 show_status() {
-    cd "$REPO_DIR" || error "Repository not found: $REPO_DIR"
+    cd "$REPO_DIR" || pc_error "Repository not found: $REPO_DIR"
     
-    info "Pi-Commander Status"
+    pc_info "Pi-Commander Status"
     echo ""
     
     # Git status
-    info "Repository:"
+    pc_info "Repository:"
     local current=$(git rev-parse --short HEAD)
     local branch=$(git branch --show-current)
     echo "  Branch: $branch"
@@ -193,15 +134,15 @@ show_status() {
     git fetch origin --quiet
     local behind=$(git rev-list HEAD..origin/main --count 2>/dev/null || echo "0")
     if [ "$behind" -gt 0 ]; then
-        warn "  Behind origin by $behind commits"
+        pc_warn "  Behind origin by $behind commits"
     else
-        log "  Up to date"
+        pc_log "  Up to date"
     fi
     
     echo ""
     
     # Container status
-    info "Running Containers:"
+    pc_info "Running Containers:"
     docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Image}}"
 }
 
@@ -266,6 +207,6 @@ case "${1:-deploy}" in
         show_help
         ;;
     *)
-        error "Unknown command: $1. Use 'help' for usage."
+        pc_error "Unknown command: $1. Use 'help' for usage."
         ;;
 esac

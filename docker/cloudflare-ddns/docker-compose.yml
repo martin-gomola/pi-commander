@@ -1,13 +1,9 @@
 services:
   cloudflare-ddns:
-    image: favonia/cloudflare-ddns:latest
+    image: favonia/cloudflare-ddns:1
     env_file:
       - .env
-    # Choose the appropriate tag based on your need:
-    # - "latest" for the latest stable version (which could become 2.x.y
-    #   in the future and break things)
-    # - "1" for the latest stable version whose major version is 1
-    # - "1.x.y" to pin the specific version 1.x.y
+    # :1 tracks the latest 1.x. Avoid :latest; a 2.x tag could break config.
     network_mode: host
     # This bypasses network isolation and makes IPv6 easier (optional; see below)
     restart: unless-stopped

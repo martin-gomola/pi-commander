@@ -2,8 +2,7 @@
 
 # Configuration
 DEPLOY_SCRIPT := ./deploy-auto.sh
-BACKUP_SCRIPT := ./scripts/backup-ssl-certs.sh
-RESTORE_SCRIPT := ./scripts/restore-ssl-certs.sh
+PI_COMMANDER := ./scripts/pi-commander
 BACKUP_DIR := /srv/backups
 
 # Colors
@@ -34,8 +33,7 @@ help: ## Display help
 	@echo "$(YELLOW)Backup & Maintenance:$(NC)"
 	@echo "  $(GREEN)make backup$(NC)              Create full backup"
 	@echo "  $(GREEN)make backup-ssl$(NC)          Backup SSL certificates only"
-	@echo "  $(GREEN)make restart-redis$(NC)       Restart AFFiNE Redis"
-	@echo "  $(GREEN)make weekly-maintenance$(NC)  Run weekly cleanup + Redis restart"
+	@echo "  $(GREEN)make weekly-maintenance$(NC)  Run weekly Docker cleanup"
 	@echo "  $(GREEN)make backup-cron-setup$(NC)       Setup weekly backups (Sunday 2 AM)"
 	@echo "  $(GREEN)make reboot-cron-setup$(NC)       Setup weekly reboot (Sunday 4 AM)"
 	@echo "  $(GREEN)make maintenance-cron-setup$(NC)  Setup weekly maintenance (Sunday 5 AM)"
@@ -73,19 +71,7 @@ deploy: ## Smart deploy (only changed services)
 update: deploy ## Alias for deploy (git pull + update services)
 
 upgrade: ## Pull latest Docker images and recreate all containers
-	@echo "Upgrading all services to latest images..."
-	@echo "Skipping services without .env file (not configured)"
-	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker-compose.yml" ] && [ -f "$$dir/.env" ]; then \
-			name=$$(basename $$dir); \
-			echo ""; \
-			echo "Upgrading $$name..."; \
-			cd "$$dir" && docker compose pull && docker compose up -d --force-recreate; \
-			cd - > /dev/null; \
-		fi \
-	done
-	@echo ""
-	@echo "$(GREEN)All configured services upgraded$(NC)"
+	@$(PI_COMMANDER) upgrade-all
 
 upgrade-service: ## Upgrade specific service to latest image (use: make upgrade-service SERVICE=nginx-proxy-manager)
 	@if [ -z "$(SERVICE)" ]; then \
@@ -93,57 +79,21 @@ upgrade-service: ## Upgrade specific service to latest image (use: make upgrade-
 		echo "Usage: make upgrade-service SERVICE=nginx-proxy-manager"; \
 		exit 1; \
 	fi
-	@echo "Upgrading $(SERVICE) to latest image..."
-	@cd docker/$(SERVICE) && \
-		docker compose pull && \
-		docker compose up -d --force-recreate && \
-		echo "$(GREEN)✓ $(SERVICE) upgraded$(NC)"
+	@$(PI_COMMANDER) upgrade-service "$(SERVICE)"
 
-update-service: ## Update specific service (use: make update-service SERVICE=affine)
+update-service: ## Update specific service (use: make update-service SERVICE=adguard)
 	@if [ -z "$(SERVICE)" ]; then \
 		echo "$(RED)Error: Please specify SERVICE$(NC)"; \
 		echo "Usage: make update-service SERVICE=<service-name>"; \
 		echo ""; \
-		echo "Available services:"; \
-		ls -1 docker/ | grep -v "^\."; \
+		echo "Available configured services:"; \
+		$(PI_COMMANDER) list-config; \
 		exit 1; \
 	fi
-	@if [ ! -d "docker/$(SERVICE)" ]; then \
-		echo "$(RED)Error: Service 'docker/$(SERVICE)' not found$(NC)"; \
-		exit 1; \
-	fi
-	@echo "Updating $(SERVICE)..."
-	@cd docker/$(SERVICE) && \
-		docker compose pull && \
-		docker compose up -d && \
-		echo "$(GREEN)✓ $(SERVICE) updated$(NC)" && \
-		docker compose ps
+	@$(PI_COMMANDER) update-service "$(SERVICE)"
 
 deploy-all: ## Deploy core infrastructure services
-	@echo "Deploying core infrastructure services..."
-	@echo ""
-	@echo "[1/5] Deploying Nginx Proxy Manager..."
-	@cd docker/nginx-proxy-manager && docker compose up -d
-	@echo "[2/5] Deploying AdGuard Home..."
-	@cd docker/adguard && docker compose up -d
-	@echo "[3/5] Deploying Twingate Connector..."
-	@cd docker/twingate && docker compose up -d
-	@echo "[4/5] Deploying Dynamic DNS..."
-	@if [ -f docker/cloudflare-ddns/.env ] && [ -s docker/cloudflare-ddns/.env ]; then \
-		echo "  Using Cloudflare DDNS..."; \
-		cd docker/cloudflare-ddns && docker compose up -d; \
-	elif [ -f docker/duckdns/.env ] && [ -s docker/duckdns/.env ]; then \
-		echo "  Using DuckDNS..."; \
-		cd docker/duckdns && docker compose up -d; \
-	else \
-		echo "  $(YELLOW)No DDNS configured (optional)$(NC)"; \
-	fi
-	@echo "[5/5] Verifying deployments..."
-	@sleep 3
-	@echo ""
-	@echo "$(GREEN)Core infrastructure deployed$(NC)"
-	@echo ""
-	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+	@$(PI_COMMANDER) deploy-all
 
 status: ## Show git and container status
 	@chmod +x $(DEPLOY_SCRIPT)
@@ -162,33 +112,15 @@ stop: ## Stop all running containers
 	@echo "$(GREEN)All services stopped$(NC)"
 
 start: ## Start all containers
-	@echo "Starting all services..."
-	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker-compose.yml" ]; then \
-			cd "$$dir" && docker compose up -d && cd ../..; \
-		fi \
-	done
-	@echo "$(GREEN)All services started$(NC)"
+	@$(PI_COMMANDER) start-all
 
 ##@ Backup & Restore
 
 backup: ## Create full backup of all data
-	@echo "Creating full backup..."
-	@sudo mkdir -p $(BACKUP_DIR)
-	@sudo tar -czf $(BACKUP_DIR)/pi-commander-full-$$(date +%Y%m%d-%H%M%S).tar.gz \
-		--exclude='*.log' \
-		/srv/docker/nginx-proxy-manager/ \
-		/srv/docker/adguard/ \
-		$(HOME)/pi-commander/docker/*/.env \
-		2>/dev/null || true
-	@echo "$(GREEN)Backup complete$(NC)"
-	@ls -lh $(BACKUP_DIR)/*.tar.gz | tail -1
+	@sudo $(PI_COMMANDER) backup-full
 
 backup-ssl: ## Backup SSL certificates only
-	@echo "Backing up SSL certificates..."
-	@chmod +x $(BACKUP_SCRIPT)
-	@sudo $(BACKUP_SCRIPT)
-	@echo "$(GREEN)SSL backup complete$(NC)"
+	@sudo $(PI_COMMANDER) backup-ssl
 
 restore: ## Restore from backup (use: make restore BACKUP_FILE=/path/to/backup.tar.gz)
 	@if [ -z "$(BACKUP_FILE)" ]; then \
@@ -197,27 +129,22 @@ restore: ## Restore from backup (use: make restore BACKUP_FILE=/path/to/backup.t
 		ls -lh $(BACKUP_DIR)/*.tar.gz 2>/dev/null || true; \
 		exit 1; \
 	fi
-	@echo "$(YELLOW)Restoring from $(BACKUP_FILE)...$(NC)"
-	@$(MAKE) stop
-	@sudo tar -xzf $(BACKUP_FILE) -C /
-	@$(MAKE) start
-	@echo "$(GREEN)Restore complete$(NC)"
+	@sudo $(PI_COMMANDER) restore-full "$(BACKUP_FILE)"
 
 restore-ssl: ## Restore SSL certificates (use: make restore-ssl BACKUP_FILE=/path/to/backup.tar.gz)
-	@chmod +x $(RESTORE_SCRIPT)
-	@sudo $(RESTORE_SCRIPT) $(BACKUP_FILE)
+	@sudo $(PI_COMMANDER) restore-ssl $(BACKUP_FILE)
 
 backup-cron-setup: ## Setup automated weekly backups (Sunday 2 AM)
 	@echo "Setting up automated backups..."
 	@chmod +x scripts/backup-cron.sh
-	@(crontab -l 2>/dev/null | grep -v "backup-cron.sh"; echo "0 2 * * 0 $(CURDIR)/scripts/backup-cron.sh") | crontab -
+	@(sudo crontab -l 2>/dev/null | grep -v "backup-cron.sh"; echo "0 2 * * 0 $(CURDIR)/scripts/backup-cron.sh") | sudo crontab -
 	@echo "$(GREEN)Automated backup scheduled for Sunday 2 AM$(NC)"
-	@echo "Current crontab:"
-	@crontab -l | grep backup-cron || true
+	@echo "Root crontab:"
+	@sudo crontab -l | grep backup-cron || true
 
 backup-cron-remove: ## Remove automated backup cron job
 	@echo "Removing automated backup cron job..."
-	@crontab -l 2>/dev/null | grep -v "backup-cron.sh" | crontab - || true
+	@sudo crontab -l 2>/dev/null | grep -v "backup-cron.sh" | sudo crontab - || true
 	@echo "$(GREEN)Automated backup removed$(NC)"
 
 reboot-cron-setup: ## Setup weekly server reboot (Sunday 4 AM)
@@ -272,28 +199,7 @@ logs-twingate: ## Show Twingate Connector logs
 
 
 health: ## Run comprehensive health checks
-	@echo "=== System Health Check ==="
-	@echo ""
-	@echo "Docker Status:"
-	@sudo systemctl is-active docker > /dev/null 2>&1 && echo "$(GREEN)✓ Docker running$(NC)" || echo "$(RED)✗ Docker not running$(NC)"
-	@echo ""
-	@echo "Running Containers:"
-	@docker ps --format "table {{.Names}}\t{{.Status}}"
-	@echo ""
-	@echo "Service Health:"
-	@printf "  NPM Admin (81):      "
-	@curl -sf http://localhost:81/api > /dev/null 2>&1 && echo "$(GREEN)✓ OK$(NC)" || echo "$(RED)✗ FAIL$(NC)"
-	@printf "  AdGuard DNS (53):    "
-	@dig @localhost google.com +short > /dev/null 2>&1 && echo "$(GREEN)✓ OK$(NC)" || echo "$(RED)✗ FAIL$(NC)"
-	@printf "  AdGuard Web (3001):  "
-	@curl -sf http://localhost:3001 > /dev/null 2>&1 && echo "$(GREEN)✓ OK$(NC)" || echo "$(RED)✗ FAIL$(NC)"
-	@echo ""
-	@echo "Disk Usage:"
-	@df -h /srv/docker 2>/dev/null || df -h /
-	@echo ""
-	@echo "Memory Usage:"
-	@free -h | grep -E "Mem|Swap"
-	@echo ""
+	@$(PI_COMMANDER) health
 
 info: ## Show system and service information
 	@echo "=== Pi-Commander System Info ==="
@@ -329,69 +235,33 @@ check-updates-notify: ## Check updates with notifications
 test-syntax: ## Validate YAML syntax (no Docker required)
 	@echo "Validating YAML syntax..."
 	@echo ""
-	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker-compose.yml" ]; then \
-			name=$$(basename $$dir); \
-			echo -n "$$name: "; \
-			if python3 -c "import yaml; yaml.safe_load(open('$$dir/docker-compose.yml'))" 2>/dev/null; then \
-				echo "$(GREEN)✓ Valid YAML$(NC)"; \
-			else \
-				echo "$(RED)✗ Invalid YAML$(NC)"; \
+	@if ! python3 -c "import yaml" 2>/dev/null; then \
+		echo "$(YELLOW)PyYAML is not installed; skipping YAML syntax validation$(NC)"; \
+		echo "Install with: python3 -m pip install PyYAML"; \
+	else \
+		for dir in docker/*/; do \
+			if [ -f "$$dir/docker-compose.yml" ]; then \
+				name=$$(basename $$dir); \
+				printf "%s: " "$$name"; \
+				if python3 -c "import yaml; yaml.safe_load(open('$$dir/docker-compose.yml'))" 2>/dev/null; then \
+					echo "$(GREEN)✓ Valid YAML$(NC)"; \
+				else \
+					echo "$(RED)✗ Invalid YAML$(NC)"; \
+				fi; \
 			fi; \
-		fi \
-	done
+		done; \
+	fi
 	@echo ""
 	@echo "$(GREEN)Syntax validation complete$(NC)"
 
 test-config: ## Validate all docker compose configurations (requires Docker)
-	@echo "Validating docker compose configurations..."
-	@echo ""
-	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker-compose.yml" ]; then \
-			name=$$(basename $$dir); \
-			echo -n "$$name: "; \
-			if cd "$$dir" && docker compose config > /dev/null 2>&1; then \
-				echo "$(GREEN)✓ Valid$(NC)"; \
-			else \
-				echo "$(RED)✗ Invalid$(NC)"; \
-				cd "$$dir" && docker compose config 2>&1 | head -5; \
-			fi; \
-			cd - > /dev/null; \
-		fi \
-	done
-	@echo ""
-	@echo "$(GREEN)Configuration validation complete$(NC)"
+	@$(PI_COMMANDER) test-config
 
 test-pull: ## Pull all images without starting (verify images exist)
-	@echo "Pulling all Docker images..."
-	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker-compose.yml" ]; then \
-			name=$$(basename $$dir); \
-			echo "Pulling $$name..."; \
-			cd "$$dir" && docker compose pull 2>&1 || true; \
-			cd - > /dev/null; \
-		fi \
-	done
-	@echo "$(GREEN)Image pull complete$(NC)"
+	@$(PI_COMMANDER) test-pull
 
 test-dry-run: ## Start services briefly to verify they launch (then stop)
-	@echo "Testing service startup (dry run)..."
-	@echo "This will start services briefly and then stop them."
-	@echo ""
-	@for dir in docker/*/; do \
-		if [ -f "$$dir/docker-compose.yml" ]; then \
-			name=$$(basename $$dir); \
-			echo "Testing $$name..."; \
-			cd "$$dir" && \
-			docker compose up -d 2>&1 && \
-			sleep 5 && \
-			docker compose ps && \
-			docker compose down 2>&1; \
-			cd - > /dev/null; \
-			echo ""; \
-		fi \
-	done
-	@echo "$(GREEN)Dry run complete$(NC)"
+	@$(PI_COMMANDER) test-dry-run
 
 test: test-syntax ## Run basic tests (no Docker required)
 
@@ -404,15 +274,9 @@ clean: ## Remove stopped containers and unused images
 	@docker volume prune -f
 	@echo "$(GREEN)Cleanup complete$(NC)"
 
-restart-redis: ## Restart AFFiNE Redis (fixes memory/IO issues)
-	@echo "Restarting AFFiNE Redis..."
-	@docker restart affine_redis 2>/dev/null || echo "$(YELLOW)affine_redis not running$(NC)"
-	@echo "$(GREEN)Redis restarted$(NC)"
-
-weekly-maintenance: ## Run weekly maintenance (clean + restart Redis)
+weekly-maintenance: ## Run weekly maintenance cleanup for core infrastructure host
 	@echo "=== Weekly Maintenance ==="
 	@$(MAKE) clean
-	@$(MAKE) restart-redis
 	@echo "$(GREEN)Weekly maintenance complete$(NC)"
 
 stats: ## Show Docker resource usage in real-time

@@ -224,9 +224,8 @@ curl -X GET "https://api.cloudflare.com/client/v4/user/tokens/verify" \
 
 Edit `docker/cloudflare-ddns/.env`:
 ```bash
-CF_API_TOKEN=your-token
-CF_ZONE_ID=your-zone-id
-CF_DOMAIN=yourdomain.com
+CLOUDFLARE_API_TOKEN=your-token
+CLOUDFLARE_DOMAINS=yourdomain.com,www.yourdomain.com
 ```
 
 Deploy:

@@ -191,6 +191,7 @@ fi
 # Make scripts executable
 chmod +x deploy-auto.sh 2>/dev/null || true
 chmod +x scripts/*.sh 2>/dev/null || true
+chmod +x scripts/pi-commander 2>/dev/null || true
 
 echo ""
 log "Installation complete!"

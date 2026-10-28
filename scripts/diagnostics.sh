@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 ################################################################################
 # Pi-Commander Diagnostics Script
 #
@@ -6,7 +6,11 @@
 # Usage: ./scripts/diagnostics.sh > diagnostics.txt
 ################################################################################
 
-set -e
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/pi-commander.sh
+source "$SCRIPT_DIR/lib/pi-commander.sh"
 
 # Colors
 readonly GREEN='\033[0;32m'
@@ -88,10 +92,7 @@ if [ -d ~/pi-commander ]; then
     echo "Commit: $(git rev-parse --short HEAD 2>/dev/null || echo 'N/A')"
     echo ""
     echo "Configuration:"
-    [ -f docker/nginx-proxy-manager/.env ] && echo "✓ nginx-proxy-manager/.env exists" || echo "✗ nginx-proxy-manager/.env missing"
-    [ -f docker/adguard/.env ] && echo "✓ adguard/.env exists" || echo "✗ adguard/.env missing"
-    [ -f docker/twingate/.env ] && echo "✓ twingate/.env exists" || echo "✗ twingate/.env missing"
-    [ -f docker/cloudflare-ddns/.env ] && echo "✓ cloudflare-ddns/.env exists" || echo "✗ cloudflare-ddns/.env missing"
+    pc_list_config_status
     echo ""
 else
     echo "Pi-Commander not found in ~/pi-commander"
@@ -100,13 +101,7 @@ fi
 info "Recent Container Errors"
 echo "======================="
 if command -v docker &> /dev/null; then
-    for container in nginx-proxy-manager adguard-home twingate-connector cloudflare-ddns; do
-        if docker ps -a --format "{{.Names}}" | grep -q "^${container}$"; then
-            echo ""
-            echo "=== $container ==="
-            docker logs $container --tail 20 2>&1 | grep -iE "error|fail|fatal" || echo "No errors found"
-        fi
-    done
+    pc_list_container_errors
 else
     echo "Docker not installed"
 fi

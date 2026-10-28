@@ -81,7 +81,7 @@ cd docker/duckdns && docker compose restart
 If you buy a domain later:
 
 1. Stop DuckDNS: `cd docker/duckdns && docker compose down`
-2. Configure Cloudflare DDNS (see [Cloudflare Setup](../docs/cloudflare-setup.md))
+2. Configure Cloudflare DDNS (see [Services Guide](../../docs/services.md#cloudflare-ddns))
 3. Update NPM proxy hosts with new domain
 4. Request new SSL certificates
 
@@ -114,4 +114,4 @@ cd docker/duckdns && docker compose restart
 **For production or business use, consider:**
 - Buying a domain ($10-15/year)
 - Using Cloudflare for DNS management
-- See [Cloudflare Setup Guide](../docs/cloudflare-setup.md)
+- See [Cloudflare DDNS](../../docs/services.md#cloudflare-ddns)

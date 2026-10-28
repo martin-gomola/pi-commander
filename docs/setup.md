@@ -170,8 +170,9 @@ make backup-cron-setup
 ```
 
 Runs every Sunday at 2 AM. Backs up:
-- All Docker service data (`/srv/docker/`)
-- SSL certificates and NPM database
+- Nginx Proxy Manager data
+- AdGuard data
+- configured service `.env` files
 
 Backups stored in `/srv/backups/` with 7-week retention.
 
@@ -189,7 +190,7 @@ Reboots server every Sunday at 4 AM. Keeps things fresh.
 make maintenance-cron-setup
 ```
 
-Runs every Sunday at 5 AM. Cleans up Docker resources and restarts Redis to prevent memory issues.
+Runs every Sunday at 5 AM. Cleans up unused Docker containers, images, and volumes.
 
 ### Check Scheduled Tasks
 

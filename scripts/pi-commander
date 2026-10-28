@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/lib/pi-commander.sh
+source "$SCRIPT_DIR/lib/pi-commander.sh"
+
+usage() {
+    cat <<'EOF'
+Usage: scripts/pi-commander <command> [args]
+
+Commands:
+  deploy-all
+  deploy-service <service>
+  update-service <service>
+  upgrade-all
+  upgrade-service <service>
+  start-all
+  health
+  test-config
+  test-pull
+  test-dry-run
+  backup-full
+  backup-ssl
+  restore-full <backup-file>
+  restore-ssl [backup-file]
+  list-config
+  container-errors
+EOF
+}
+
+require_arg() {
+    local value="${1:-}"
+    local name="$2"
+    [ -n "$value" ] || pc_error "Missing required argument: $name"
+}
+
+case "${1:-}" in
+    deploy-all)
+        pc_deploy_all
+        ;;
+    deploy-service)
+        require_arg "${2:-}" "service"
+        pc_deploy_service "$2"
+        ;;
+    update-service)
+        require_arg "${2:-}" "service"
+        pc_update_service "$2"
+        ;;
+    upgrade-all)
+        pc_upgrade_all
+        ;;
+    upgrade-service)
+        require_arg "${2:-}" "service"
+        pc_upgrade_service "$2"
+        ;;
+    start-all)
+        pc_start_all
+        ;;
+    health)
+        pc_run_health
+        ;;
+    test-config)
+        pc_test_config_all
+        ;;
+    test-pull)
+        pc_test_pull_all
+        ;;
+    test-dry-run)
+        pc_test_dry_run_all
+        ;;
+    backup-full)
+        pc_create_full_backup
+        ;;
+    backup-ssl)
+        pc_create_ssl_backup
+        ;;
+    restore-full)
+        require_arg "${2:-}" "backup-file"
+        pc_restore_full_backup "$2"
+        ;;
+    restore-ssl)
+        if [ -z "${2:-}" ]; then
+            pc_list_ssl_backups
+            echo ""
+            echo "To restore a backup, run:"
+            echo "  sudo $0 restore-ssl <backup-file-path>"
+        else
+            pc_restore_ssl_backup "$2"
+        fi
+        ;;
+    list-config)
+        pc_list_config_status
+        ;;
+    container-errors)
+        pc_list_container_errors
+        ;;
+    help|--help|-h|"")
+        usage
+        ;;
+    *)
+        pc_error "Unknown command: $1"
+        ;;
+esac
